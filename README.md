@@ -6,3 +6,5 @@ the correct files that you would need for the mod. The comments are god awful, b
 
 Timeline:
 04/10/17 - Milestone checkpoint completed
+04/10/17, 11:48 PM: For those looking to make the Mod work, a the output directory of the visual 
+                    studio sln file has to be set to whatever you named the folder.***
