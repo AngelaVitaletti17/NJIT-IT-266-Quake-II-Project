@@ -7,11 +7,15 @@ typedef struct
 	void	(*spawn)(edict_t *ent);
 } spawn_t;
 
+void MyModReplace(edict_t *ent, gitem_t *item); //Will Replace Old Weapons with Mine (I hope) in random spots around the map, also keys
 
 void SP_item_health (edict_t *self);
 void SP_item_health_small (edict_t *self);
 void SP_item_health_large (edict_t *self);
 void SP_item_health_mega (edict_t *self);
+
+void SP_item_firework(edict_t *self); //av
+void SP_item_rock(edict_t *self); //av
 
 void SP_info_player_start (edict_t *ent);
 void SP_info_player_deathmatch (edict_t *ent);
@@ -246,6 +250,9 @@ spawn_t	spawns[] = {
 	{"turret_base", SP_turret_base},
 	{"turret_driver", SP_turret_driver},
 
+	{"ammo_rocks", SP_item_rock}, //av
+	{"ammo_fireworks", SP_item_firework}, //av
+
 	{NULL, NULL}
 };
 
@@ -277,6 +284,10 @@ void ED_CallSpawn (edict_t *ent)
 		{	// found it
 			SpawnItem (ent, item);
 			return;
+		}
+		else
+		{
+			MyModReplace(ent, item); //AV, followed tutorial, will add my own twists in function
 		}
 	}
 
@@ -838,7 +849,7 @@ void SP_worldspawn (edict_t *ent)
 
 	snd_fry = gi.soundindex ("player/fry.wav");	// standing in lava / slime
 
-	PrecacheItem (FindItem ("Blaster"));
+	PrecacheItem (FindItem ("Fireworks")); //AV
 
 	gi.soundindex ("player/lava1.wav");
 	gi.soundindex ("player/lava2.wav");
@@ -963,3 +974,27 @@ void SP_worldspawn (edict_t *ent)
 	gi.configstring(CS_LIGHTS+63, "a");
 }
 
+//AV Replaces stuff on the map
+void MyModReplace(edict_t *ent, gitem_t *item){
+	char *replace_item[6][2] =
+	{
+		{"ammo_shells", "ammo_fireworks"},
+		{"ammo_grenades", "ammo_rocks"},
+		{"ammo_bullets", "ammo_skyworks"},
+		{"weapon_chaingun", "item_key"},
+		{"weapon_rocketlauncher", "item_key"},
+		{"weapon_shotgun", "item_key"}
+	};
+	int i;
+	for (i = 0; i < 6; i++)
+	{
+		if (!replace_item[i][0])
+			continue;
+		if (Q_stricmp(ent->classname, replace_item[i][0]) == 0)
+		{
+			ent->classname = item->classname = replace_item[i][1];
+			SpawnItem(ent, item);
+			return;
+		}
+	}
+}

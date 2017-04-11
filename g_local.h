@@ -84,7 +84,9 @@ typedef enum
 	AMMO_ROCKETS,
 	AMMO_GRENADES,
 	AMMO_CELLS,
-	AMMO_SLUGS
+	AMMO_SLUGS,
+	AMMO_FIREWORKS, //AV
+	AMMO_ROCKS //AV
 } ammo_t;
 
 
@@ -480,6 +482,8 @@ extern	int	body_armor_index;
 #define MOD_HIT				32
 #define MOD_TARGET_BLASTER	33
 #define MOD_FRIENDLY_FIRE	0x8000000
+#define MOD_FIREWORKS		34 //AV
+#define MOD_ROCK			35 //AV
 
 extern	int	meansOfDeath;
 
@@ -715,6 +719,10 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius, int radius_damage);
 void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick);
 void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius);
+void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild); //av
+void fire_fireworks_sky (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild); //av
+void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);//av
+void throw_rock (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed); //Throw those rocks, av
 
 //
 // g_ptrail.c
@@ -941,6 +949,10 @@ struct gclient_s
 
 	edict_t		*chase_target;		// player we are chasing
 	qboolean	update_chase;		// need to update chase info?
+
+	vec3_t		turn; //av
+	vec3_t		turnangles; //av
+	vec3_t		peek, peekangles; //av
 };
 
 
@@ -1091,5 +1103,14 @@ struct edict_s
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
+
+	edict_t		*flashlight;
+	edict_t		*key;
+
+	int			pickup; //Implement later for picking up already thrown items, AV
+
+	vec3_t		threesixty; //Turn around 360 degrees, AV
+	int			freeze; //Don't move, AV
+	int			peak; //Peek around corners, AV
 };
 

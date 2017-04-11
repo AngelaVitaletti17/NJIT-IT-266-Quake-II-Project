@@ -1,6 +1,12 @@
 #include "g_local.h"
 #include "m_player.h"
 
+//3 of 5 Custom Actions
+void Cmd_Zoom_f(edict_t *ent); //Zoom in
+void Cmd_Freeze_f(edict_t *ent); //Freeze?
+void Cmd_Turn_f(edict_t *ent); //Turn 360 degrees
+
+trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 
 char *ClientTeam (edict_t *ent)
 {
@@ -222,6 +228,22 @@ void Cmd_Give_f (edict_t *ent)
 
 		if (!give_all)
 			return;
+	}
+	//AV
+	if (Q_stricmp(gi.argv(1), "zoom") == 0)
+	{
+		Cmd_Zoom_f(ent);
+		return;
+	}
+	if (Q_stricmp(gi.argv(1), "turn") == 0)
+	{
+		Cmd_Turn_f(ent);
+		return;
+	}
+	if (Q_stricmp(gi.argv(1), "freeze") == 0)
+	{
+		Cmd_Freeze_f(ent);
+		return;
 	}
 
 	if (give_all)
@@ -880,7 +902,79 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+//===========
+/*
+	Function: Cmd_Zoom_f
+	Description: Zoom in, zoom out
+	Author: Angela Vitaletti
+*/
+//===========
+void Cmd_Zoom_f(edict_t *ent)
+{
+	//Set to default if we're zoomed in
+	if (ent->client->ps.fov == 50)
+		ent->client->ps.fov = 90;
+	else if (ent->client->ps.fov == 90)
+		ent->client->ps.fov = 50;
 
+}
+
+//===========
+/*
+	Function: Cmd_Freeze_f
+	Description: Freeze. Don't move. This can be used as a stealth mechanism.
+				 If they're frozen, perhaps the creature won't see us.
+	Author: Angela Vitaletti
+*/
+//===========
+void Cmd_Freeze_f(edict_t *ent)
+{
+	//Not frozen, freeze
+	if (ent->freeze == 0)
+	{
+		VectorClear(ent->velocity);
+		ent->client->ps.pmove.pm_time = 100000>>20;
+		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+		ent->freeze = 1;
+	}
+	//Frozen, melt!
+	else if (ent->freeze != 0){
+		ent->client->ps.pmove.pm_time = 10;
+		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+		ent->freeze = 0;
+	}
+}
+
+//===========
+/*
+	Function: Cmd_Turn_f
+	Description: Perform a 360 degree turn
+	Author: Angela Vitaletti
+*/
+//===========
+void Cmd_Turn_f(edict_t *ent)
+{
+	int i;
+	VectorCopy(ent->s.origin, ent->client->turn);
+	VectorCopy(ent->s.angles, ent->client->turnangles);
+	ent->client->turnangles[1] = ent->client->turnangles[1] - 180;
+
+	VectorCopy (ent->client->turn, ent->s.origin);
+	VectorCopy (ent->client->turn, ent->s.old_origin);
+	ent->s.origin[2] += 10;
+
+	for (i=0 ; i<3 ; i++)
+		ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->turnangles[i] - ent->client->resp.cmd_angles[i]);
+
+	VectorClear (ent->s.angles);
+	VectorClear (ent->client->ps.viewangles);
+	VectorClear (ent->client->v_angle);
+
+	gi.linkentity(ent);
+	
+
+
+}
 /*
 =================
 ClientCommand
@@ -968,6 +1062,13 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+	//Here's my new player actions
+	else if (Q_stricmp(cmd, "zoom") == 0)
+		Cmd_Zoom_f(ent);
+	else if (Q_stricmp(cmd, "freeze") == 0)
+		Cmd_Freeze_f(ent);
+	else if (Q_stricmp(cmd, "turn") == 0)
+		Cmd_Turn_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

@@ -16,6 +16,10 @@ void Weapon_Grenade (edict_t *ent);
 void Weapon_GrenadeLauncher (edict_t *ent);
 void Weapon_Railgun (edict_t *ent);
 void Weapon_BFG (edict_t *ent);
+void Weapon_Fireworks (edict_t*ent); //AV
+void Weapon_Fireworks2 (edict_t*ent); //AV
+void Weapon_Rock(edict_t *ent); //AV
+void Weapon_Flashlight(edict_t* self);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -346,15 +350,15 @@ void Use_Quad (edict_t *ent, gitem_t *item)
 
 void Use_Breather (edict_t *ent, gitem_t *item)
 {
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
-	ValidateSelectedItem (ent);
+		ent->client->pers.inventory[ITEM_INDEX(item)]--;
+		//ValidateSelectedItem (ent);
 
-	if (ent->client->breather_framenum > level.framenum)
-		ent->client->breather_framenum += 300;
-	else
-		ent->client->breather_framenum = level.framenum + 300;
+		if (ent->client->breather_framenum > level.framenum)
+			ent->client->breather_framenum += 300;
+		else
+			ent->client->breather_framenum = level.framenum + 300;
 
-//	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"), 1, ATTN_NORM, 0);
+	//	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"), 1, ATTN_NORM, 0);
 }
 
 //======================================================================
@@ -425,7 +429,7 @@ qboolean Pickup_Key (edict_t *ent, edict_t *other)
 
 //======================================================================
 
-qboolean Add_Ammo (edict_t *ent, gitem_t *item, int count)
+qboolean Add_Ammo (edict_t *ent, gitem_t *item, int count) //If I want to add my own ammo type, maybe look at this, AV
 {
 	int			index;
 	int			max;
@@ -482,7 +486,7 @@ qboolean Pickup_Ammo (edict_t *ent, edict_t *other)
 
 	if (weapon && !oldcount)
 	{
-		if (other->client->pers.weapon != ent->item && ( !deathmatch->value || other->client->pers.weapon == FindItem("blaster") ) )
+		if (other->client->pers.weapon != ent->item && ( !deathmatch->value || other->client->pers.weapon == FindItem("flashlight") ) )
 			other->client->newweapon = ent->item;
 	}
 
@@ -1266,29 +1270,110 @@ gitem_t	itemlist[] =
 	// WEAPONS 
 	//
 
-/* weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16)
-always owned, never in the world
-*/
+	//FIREWORKS IN ITEM LIST, AV
 	{
-		"weapon_blaster", 
+		"ammo_fireworks", //careful what you name shit, ang. If it can't find a spawn function, check here.
+		Pickup_Ammo,
+		Use_Weapon,
+		Drop_Ammo,
+		Weapon_Fireworks,
+		"misc/am_pkup.wav",
+		"models/items/ammo/grenades/medium/tris.md2", 0,
+		"models/weapons/v_handgr/tris.md2",
+/* icon */		"w_blaster",
+/* pickup */	"Fireworks",
+/* width */		3,
+		1,
+		"fireworks",
+		IT_AMMO|IT_WEAPON,
+		NULL,
+		NULL,
+		AMMO_GRENADES,
+	""
+	},
+		{
+		"ammo_skyworks", //careful what you name shit, ang. If it can't find a spawn function, check here.
+		Pickup_Ammo,
+		Use_Weapon,
+		Drop_Ammo,
+		Weapon_Fireworks2,
+		"misc/am_pkup.wav",
+		"models/items/ammo/grenades/medium/tris.md2", 0,
+		"models/weapons/v_handgr/tris.md2",
+/* icon */		"w_sshotgun",
+/* pickup */	"Skyworks",
+/* width */		3,
+		1,
+		"skyworks",
+		IT_AMMO|IT_WEAPON,
+		NULL,
+		NULL,
+		AMMO_GRENADES,
+	""
+	},
+		//AV
+	//Rock, they are their own weapons and ammo. RIP.
+	{
+		"ammo_rocks",
+		Pickup_Ammo,
+		Use_Weapon,
+		Drop_Ammo,
+		Weapon_Rock,
+		"misc/am_pkup.wav",
+		"models/items/ammo/grenades/medium/tris.md2", 0,
+		"models/weapons/v_handgr/tris.md2",
+		"a_grenades",
+		"Rocks",
+		3,
+		1,
+		"rocks",
+		IT_AMMO|IT_WEAPON,
+		NULL,
+		NULL,
+		AMMO_GRENADES,
+		""
+	},
+	{
+		"weapon_flashlight",
 		NULL,
 		Use_Weapon,
 		NULL,
-		Weapon_Blaster,
-		"misc/w_pkup.wav",
-		NULL, 0,
-		"models/weapons/v_blast/tris.md2",
-/* icon */		"w_blaster",
-/* pickup */	"Blaster",
+		Weapon_Flashlight,
+		"misc/am_pkup.wav",
+		"models/items/ammo/grenades/medium/tris.md2", 0,
+		"models/weapons/v_handgr/tris.md2",
+		"a_grenades",
+		"Flashlight",
 		0,
 		0,
+		"flashlight",
+		IT_WEAPON,
 		NULL,
-		IT_WEAPON|IT_STAY_COOP,
-		WEAP_BLASTER,
 		NULL,
-		0,
-/* precache */ "weapons/blastf1a.wav misc/lasfly.wav"
+		AMMO_BULLETS,
+		""
 	},
+	{
+		"item_key",
+		Pickup_Key,
+		NULL,
+		Drop_General,
+		NULL,
+		"items/pkup.wav",
+		"models/items/keys/data_cd/tris.md2", EF_ROTATE,
+		NULL,
+		"k_redkey",
+		"KEEEEEY",
+		1,
+		0,
+		NULL,
+		IT_STAY_COOP|IT_KEY,
+		0,
+		NULL,
+		0,
+/* precache */ ""
+	},
+	//Removed blaster
 
 /*QUAKED weapon_shotgun (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
@@ -1714,6 +1799,8 @@ always owned, never in the world
 
 /*QUAKED item_breather (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
+//AV 
+//OKAY HERE IS MY ATTEMPT TO MAKE THIS "USE REBREATHER SHIT INTO MINE OWN SHIT
 	{
 		"item_breather",
 		Pickup_Powerup,
@@ -2113,6 +2200,31 @@ void SP_item_health (edict_t *self)
 	gi.soundindex ("items/n_health.wav");
 }
 
+//Rock spawn, AV
+//EDIT - Do I need this?
+//EDIT2 - Apparently I do not... What did I do?
+void SP_item_rock(edict_t *self){
+	if (deathmatch->value)
+	{
+		G_FreeEdict(self);
+		return;
+	}
+	self->model = "models/items/healing/medium/tris.md2";
+	self->count = 10;
+	SpawnItem (self, FindItem("Blaster"));
+}
+
+void SP_item_firework(edict_t *self){
+	if (deathmatch->value)
+	{
+		G_FreeEdict(self);
+		return;
+	}
+	self->model = "models/items/healing/medium/tris.md2";
+	self->count = 10;
+	SpawnItem (self, FindItem("Fireworks"));
+}
+
 /*QUAKED item_health_small (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
 void SP_item_health_small (edict_t *self)
@@ -2120,6 +2232,7 @@ void SP_item_health_small (edict_t *self)
 	if ( deathmatch->value && ((int)dmflags->value & DF_NO_HEALTH) )
 	{
 		G_FreeEdict (self);
+		gi.bprintf(PRINT_HIGH, "Is this even working......................");
 		return;
 	}
 

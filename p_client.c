@@ -364,6 +364,14 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 				message = "tried to invade";
 				message2 = "'s personal space";
 				break;
+			case MOD_FIREWORKS: //AV
+				message = "was blinded and brutally maimed by";
+				message2 = "'s tiny fireworks. :)";
+				break;
+			case MOD_ROCK: //AV, I feel like we don't actually need this mod or fireworks... Since you can't actually take damage
+				message = "was distracted by";
+				message2 = "'s rock";
+				break;
 			}
 			if (message)
 			{
@@ -401,7 +409,7 @@ void TossClientWeapon (edict_t *self)
 	item = self->client->pers.weapon;
 	if (! self->client->pers.inventory[self->client->ammo_index] )
 		item = NULL;
-	if (item && (strcmp (item->pickup_name, "Blaster") == 0))
+	if (item && (strcmp (item->pickup_name, "Flashlight") == 0)) //AV
 		item = NULL;
 
 	if (!((int)(dmflags->value) & DF_QUAD_DROP))
@@ -591,7 +599,7 @@ void InitClientPersistant (gclient_t *client)
 
 	memset (&client->pers, 0, sizeof(client->pers));
 
-	item = FindItem("Blaster");
+	item = FindItem("Flashlight"); //AV, was Blaster
 	client->pers.selected_item = ITEM_INDEX(item);
 	client->pers.inventory[client->pers.selected_item] = 1;
 
@@ -1075,7 +1083,7 @@ Called when a player connects to a server or respawns in
 a deathmatch.
 ============
 */
-void PutClientInServer (edict_t *ent)
+void PutClientInServer (edict_t *ent) //Use this for spawning enemies in the future? AV
 {
 	vec3_t	mins = {-16, -16, -24};
 	vec3_t	maxs = {16, 16, 32};
@@ -1085,6 +1093,7 @@ void PutClientInServer (edict_t *ent)
 	int		i;
 	client_persistant_t	saved;
 	client_respawn_t	resp;
+	gitem_t *give_ammo; //AV
 
 	// find a spawn point
 	// do it before setting health back up, so farthest
@@ -1232,6 +1241,11 @@ void PutClientInServer (edict_t *ent)
 	}
 
 	gi.linkentity (ent);
+
+	//av
+	give_ammo = FindItem("flashlight");
+	Add_Ammo(ent, give_ammo, 20);
+	
 
 	// force the current weapon up
 	client->newweapon = client->pers.weapon;
@@ -1607,7 +1621,9 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		{
 			pm.s.origin[i] = ent->s.origin[i]*8;
 			pm.s.velocity[i] = ent->velocity[i]*8;
-		}
+		}//controls how fast the player moves?
+
+		//I think this is where I want to implement running. AV
 
 		if (memcmp(&client->old_pmove, &pm.s, sizeof(pm.s)))
 		{
@@ -1640,8 +1656,15 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 		client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 		client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
+		//360 AV
+		if (ent->groundentity && pm.groundentity){
+			//gi.bprintf(PRINT_DEVELOPER, "Touch the ground?");
+		}
+
 		if (ent->groundentity && !pm.groundentity && (pm.cmd.upmove >= 10) && (pm.waterlevel == 0))
 		{
+			//This is done when the player jumps.. But where is the keybinding?
+			//Apparently, +moveup is to jump
 			gi.sound(ent, CHAN_VOICE, gi.soundindex("*jump1.wav"), 1, ATTN_NORM, 0);
 			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		}

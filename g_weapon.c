@@ -1,5 +1,7 @@
 #include "g_local.h"
 
+static void Sparkler_Explode(edict_t *ent);
+void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
 
 /*
 =================
@@ -432,6 +434,167 @@ static void Grenade_Explode (edict_t *ent)
 
 	G_FreeEdict (ent);
 }
+//--------------------------------------------------------------------------------------------------------------------------------------------------------//
+/*	
+	Function: Firework_Explode_Cluster
+	Description: This function is a modified version of a mod found on Quake DeveLS. The original function was used to make a cluser grenade of four 
+				 grenades, not including the one thrown. This function can be used to throw a one-burst firework that shoots into the air.
+	Author: Angela Vitaletti
+*/
+//--------------------------------------------------------------------------------------------------------------------------------------------------------//
+int toomany = 0;
+int notChild = false;
+static void Firework_Explode_Cluster(edict_t *ent)
+
+
+{
+	vec3_t		origin;
+
+	vec3_t		sparks[4];
+
+	int i;
+	int j;
+	if (toomany < 16){
+		i= 0;
+		for (i = 0; i < 4; i++)
+		{
+			VectorSet(sparks[i], crandom() * 10, crandom() * 10, crandom() * 20);
+		}
+		toomany++;
+
+		VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
+		gi.WriteByte (svc_temp_entity);
+
+		if (ent->waterlevel)
+		{
+			if (ent->groundentity)
+				gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
+			else
+				gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
+		}
+		else
+		{
+			if (ent->groundentity)
+				gi.WriteByte (TE_GRENADE_EXPLOSION);
+			else
+				gi.WriteByte (TE_ROCKET_EXPLOSION);
+		}
+
+		gi.WritePosition (origin);
+		gi.multicast (ent->s.origin, MULTICAST_PVS);
+	
+		j = 0;
+		for (j = 0; j < 4; j++)
+		{
+			fire_fireworks_fountain(ent, origin, sparks[j], 0, 20, 1.0, 0);
+			G_FreeEdict (ent);
+		}
+		
+	}
+	else
+	{
+		G_FreeEdict (ent);
+	}
+
+}
+
+//--------------------------------------------------------------------------------------------------------------------------------------------------------//
+/*	
+	Function: Firework_Explode_Single
+	Description: This function is a modified version of a mod found on Quake DeveLS. The original function was used to make a cluser grenade of four 
+				 grenades, not including the one thrown. This function can be used to shoot one of those fountain-sparkler ones that stay on the ground.
+	Author: Angela Vitaletti
+*/
+//--------------------------------------------------------------------------------------------------------------------------------------------------------//
+static void Firework_Explode_Single(edict_t *ent)
+{
+	vec3_t		origin;
+
+	vec3_t		spark1;
+
+	qboolean	held;
+
+	VectorSet(spark1, 0, 0, 100);
+
+	VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
+	gi.WriteByte (svc_temp_entity);
+	if (ent->waterlevel)
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
+		else
+			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
+	}
+	else
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION);
+		else
+			gi.WriteByte (TE_ROCKET_EXPLOSION);
+	}
+
+	gi.WritePosition (origin);
+	gi.multicast (ent->s.origin, MULTICAST_PVS);
+
+	fireworks_splash(ent, origin, spark1, 0, 10, 1.0);
+
+	G_FreeEdict (ent);
+
+}
+
+static void Sparkler_Explode(edict_t* ent)
+{
+	vec3_t		origin;
+
+	vec3_t		spark1;
+	vec3_t		spark2;
+	vec3_t		spark3;
+	vec3_t		spark4;
+
+	vec3_t		sparks[8];
+
+	vec3_t		neworigin;
+	vec3_t		downbelow;
+
+	int i;
+	int j;
+
+	VectorSet(downbelow, 0, 0, -50);
+
+	for (i = 0; i < 8; i++)
+	{
+		VectorSet(sparks[i], crandom() * 10, crandom() * 10, crandom() * 20);
+	}
+
+	VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
+	gi.WriteByte (svc_temp_entity);
+	if (ent->waterlevel)
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
+		else
+			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
+	}
+	else
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION);
+		else
+				gi.WriteByte (TE_GRENADE_EXPLOSION);
+	}
+	
+
+	gi.WritePosition (origin);
+	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	
+	VectorSubtract(origin, downbelow, neworigin);
+
+	for (j = 0; j < 8; j++)
+	{
+		fire_grenade2(ent, neworigin, sparks[j], 0, 10, 1.0, 0, false);
+	}
+	G_FreeEdict(ent);
+}
 
 static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
@@ -440,8 +603,43 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 
 	if (surf && (surf->flags & SURF_SKY))
 	{
-		G_FreeEdict (ent);
+		//G_FreeEdict (ent);
+		//return;
+	}
+
+	if (!other->takedamage)
+	{
+		if (ent->spawnflags & 1)
+		{
+			if (random() > 0.5)
+				gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb1a.wav"), 1, ATTN_NORM, 0);
+			else
+				gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb2a.wav"), 1, ATTN_NORM, 0);
+		}
+		else
+		{
+			gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/grenlb1b.wav"), 1, ATTN_NORM, 0);
+		}
 		return;
+	}
+
+	ent->enemy = other;
+	Grenade_Explode (ent);
+}
+
+//AV My_Touch Function
+static void My_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
+{
+	if (other == ent->owner)
+		return;
+
+	if (surf && (surf->flags & SURF_SKY))
+	{
+		//fire_grenade(ent, ent->s.origin,ent->s.origin,0,10,1.0,0);
+		ent->s.renderfx = EF_GRENADE;
+		gi.multicast(ent->s.origin, MULTICAST_ALL);
+		Sparkler_Explode(ent);
+		G_FreeEdict (ent);
 	}
 
 	if (!other->takedamage)
@@ -514,14 +712,14 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	VectorSet (grenade->avelocity, 300, 300, 300);
 	grenade->movetype = MOVETYPE_BOUNCE;
 	grenade->clipmask = MASK_SHOT;
-	grenade->solid = SOLID_BBOX;
+	grenade->solid = SOLID_BSP;
 	grenade->s.effects |= EF_GRENADE;
 	VectorClear (grenade->mins);
 	VectorClear (grenade->maxs);
 	grenade->s.modelindex = gi.modelindex ("models/objects/grenade2/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
-	grenade->nextthink = level.time + timer;
+	grenade->nextthink = level.time;
 	grenade->think = Grenade_Explode;
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
@@ -539,6 +737,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 		gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
 		gi.linkentity (grenade);
 	}
+
 }
 
 
@@ -557,7 +756,8 @@ void rocket_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *su
 
 	if (surf && (surf->flags & SURF_SKY))
 	{
-		G_FreeEdict (ent);
+		//fire_grenade2(ent, origin, origin, 0, 5, 0.5, 0, false);
+		//G_FreeEdict (ent);
 		return;
 	}
 
@@ -783,6 +983,157 @@ void bfg_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf
 	gi.multicast (self->s.origin, MULTICAST_PVS);
 }
 
+//Fireworks Fire Function : Angela Vitaletti, AV
+/*
+==============
+Fire Fireworks
+==============
+*/
+static void ItsARock(edict_t *ent)
+{
+	G_FreeEdict(ent);
+}
+void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild)
+{
+	edict_t	*firework;
+	vec3_t	dir;
+	vec3_t	forward, right, up;
+
+	vectoangles (aimdir, dir);
+	AngleVectors (dir, forward, right, up);
+
+	firework = G_Spawn();
+	VectorCopy (start, firework->s.origin);
+	VectorScale (aimdir, speed, firework->velocity);
+	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
+	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
+	VectorSet (firework->avelocity, 300, 300, 300);
+	firework->movetype = MOVETYPE_BOUNCE;
+	firework->clipmask = MASK_SHOT;
+	firework->solid = SOLID_BBOX;
+	firework->s.effects |= EF_GRENADE;
+	VectorClear (firework->mins);
+	VectorClear (firework->maxs);
+	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
+	firework->owner = self;
+	firework->touch = Grenade_Touch;
+	if(isChild == 1)
+		firework->nextthink = level.time + 10; //takes longer to explode
+	else
+		firework->nextthink = level.time + 1.0; 
+	firework->think = Firework_Explode_Cluster;//HEYO
+	firework->classname = "hfirework";
+	firework->spawnflags = 1;
+	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+	gi.linkentity(firework);
+}
+
+//Sky firework
+void throw_rock (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild)
+{
+	edict_t	*firework;
+	vec3_t	dir;
+	vec3_t	forward, right, up;
+
+	vectoangles (aimdir, dir);
+	AngleVectors (dir, forward, right, up);
+
+	firework = G_Spawn();
+	VectorCopy (start, firework->s.origin);
+	VectorScale (aimdir, speed, firework->velocity);
+	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
+	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
+	VectorSet (firework->avelocity, 300, 300, 300);
+	firework->movetype = MOVETYPE_BOUNCE;
+	firework->clipmask = MASK_SHOT;
+	firework->solid = SOLID_BBOX;
+	firework->s.effects |= EF_GRENADE;
+	VectorClear (firework->mins);
+	VectorClear (firework->maxs);
+	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
+	firework->owner = self;
+	firework->touch = Grenade_Touch;
+	if(isChild == 1)
+		firework->nextthink = level.time + 10; //takes longer to explode
+	else
+		firework->nextthink = level.time + 1.0; 
+	firework->think = ItsARock; //HEYO
+	firework->classname = "sfirework";
+	firework->spawnflags = 1;
+	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+	gi.linkentity(firework);
+}
+
+//Explosion in the sky
+void fireworks_splash (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer)
+{
+	edict_t	*firework;
+	vec3_t	dir;
+	vec3_t	forward, right, up;
+
+	vectoangles (aimdir, dir);
+	AngleVectors (dir, forward, right, up);
+
+	firework = G_Spawn();
+	VectorCopy (start, firework->s.origin);
+	VectorScale (aimdir, speed, firework->velocity);
+	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
+	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
+	VectorSet (firework->avelocity, 300, 300, 300);
+	firework->movetype = MOVETYPE_FLYMISSILE;
+	firework->clipmask = MASK_SHOT;
+	firework->solid = SOLID_BBOX;
+	firework->s.effects |= EF_IONRIPPER;
+	VectorClear (firework->mins);
+	VectorClear (firework->maxs);
+	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
+	firework->owner = self;
+	firework->touch = My_Touch;
+	firework->nextthink = level.time + 2.0;
+	firework->think = Sparkler_Explode; //HEYO
+	firework->classname = "sparkfirework";
+	firework->spawnflags = 1;
+	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+	gi.linkentity(firework);
+}
+
+//Throw a damn rock
+void fire_fireworks_sky(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
+{
+	edict_t *rock;
+	vec3_t dir;
+	vec3_t forward, right, up;
+
+	vectoangles(aimdir, dir);
+	AngleVectors(dir, forward, right, up);
+
+	rock = G_Spawn();
+	VectorCopy(start, rock->s.origin);
+	VectorScale(aimdir, speed, rock->velocity);
+	VectorMA(rock->velocity, 200 + crandom() * 10.0, up, rock->velocity);
+	VectorMA(rock->velocity, crandom() * 10.0, right, rock->velocity);
+	VectorSet(rock->avelocity, 300, 300, 300);
+	rock->movetype = MOVETYPE_BOUNCE;
+	rock->clipmask = MASK_SHOT;
+	rock->solid = SOLID_BBOX;
+	rock->s.effects |= EF_GRENADE;
+	VectorClear(rock->mins);
+	VectorClear(rock->maxs);
+	rock->s.modelindex = gi.modelindex("models/objects/grenade/tris.md2");
+	rock->owner = self;
+	rock->touch = Grenade_Touch;
+	rock->nextthink = level.time + 5.0;
+	rock->think = Firework_Explode_Single;
+	rock->classname = "hgrenade";
+	//rock->takedamage = DAMAGE_NO;
+	rock->spawnflags = 1;
+	rock->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+	gi.linkentity(rock);
+}
 
 void bfg_think (edict_t *self)
 {
@@ -795,10 +1146,7 @@ void bfg_think (edict_t *self)
 	int		dmg;
 	trace_t	tr;
 
-	if (deathmatch->value)
-		dmg = 5;
-	else
-		dmg = 10;
+	dmg = 10;
 
 	ent = NULL;
 	while ((ent = findradius(ent, self->s.origin, 256)) != NULL)
@@ -896,4 +1244,76 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 		check_dodge (self, bfg->s.origin, dir, speed);
 
 	gi.linkentity (bfg);
+}
+
+static void FL_TOUCH(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
+{
+	
+			
+			self->pickup = 0;
+			if (self->pickup == 0)
+			{
+				//Implement a pickup function in the future, 21 beacons are allowed right now... That may also be too many
+			}
+			self->nextthink = level.time + 0.1;
+}
+
+static void FL_think(edict_t* ent)
+{
+	vec3_t		origin;
+
+	if (ent->owner->client)
+		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
+	VectorMA (ent->s.origin, -0.02, ent->velocity, origin);
+	gi.WriteByte (svc_temp_entity);
+	if (ent->waterlevel)
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
+		else
+			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
+	}
+	else
+	{
+		if (ent->groundentity)
+			gi.WriteByte (TE_GRENADE_EXPLOSION);
+		else
+			gi.WriteByte (TE_ROCKET_EXPLOSION);
+	}
+	gi.WritePosition (origin);
+	gi.multicast (ent->s.origin, MULTICAST_PHS);
+}
+
+void FL_make(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
+{
+	edict_t	*firework;
+	vec3_t	dir;
+	vec3_t	forward, right, up;
+
+	vectoangles (aimdir, dir);
+	AngleVectors (dir, forward, right, up);
+
+	firework = G_Spawn();
+	VectorCopy (start, firework->s.origin);
+	VectorScale (aimdir, speed, firework->velocity);
+	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
+	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
+	VectorSet (firework->avelocity, 300, 300, 300);
+	firework->movetype = MOVETYPE_BOUNCE;
+	firework->clipmask = MASK_SHOT;
+	firework->solid = SOLID_BBOX;
+	firework->s.renderfx |= RF_SHELL_GREEN;
+	firework->s.effects |= EF_BFG;
+	VectorClear (firework->mins);
+	VectorClear (firework->maxs);
+	firework->s.modelindex = gi.modelindex ("models/objects/grenade/tris.md2");
+	firework->owner = self;
+	firework->touch = FL_TOUCH;
+		firework->nextthink = level.time + 10; //takes longer to explode
+		firework->think = FL_think; //HEYO
+	firework->classname = "flashlight";
+	firework->spawnflags = 1;
+	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
+	gi.linkentity(firework);
 }
