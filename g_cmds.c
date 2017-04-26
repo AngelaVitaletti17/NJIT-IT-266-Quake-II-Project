@@ -5,6 +5,9 @@
 void Cmd_Zoom_f(edict_t *ent); //Zoom in
 void Cmd_Freeze_f(edict_t *ent); //Freeze?
 void Cmd_Turn_f(edict_t *ent); //Turn 360 degrees
+void Make_Crouch_True(edict_t *ent);
+void Cmd_Peek_Left_f(edict_t *ent);
+void Cmd_Peek_Right_f(edict_t *ent);
 
 trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 
@@ -246,6 +249,21 @@ void Cmd_Give_f (edict_t *ent)
 		return;
 	}
 
+	if (Q_stricmp(gi.argv(1), "isCrouching") == 0)
+	{
+		Make_Crouch_True(ent);
+		return;
+	}
+	if (Q_stricmp(gi.argv(1), "peekL") == 0)
+	{
+		Cmd_Peek_Left_f(ent);
+		return;
+	}
+	if (Q_stricmp(gi.argv(1), "peekR") == 0)
+	{
+		Cmd_Peek_Right_f(ent);
+		return;
+	}
 	if (give_all)
 	{
 		for (i=0 ; i<game.num_items ; i++)
@@ -971,9 +989,125 @@ void Cmd_Turn_f(edict_t *ent)
 	VectorClear (ent->client->v_angle);
 
 	gi.linkentity(ent);
-	
+}
+
+//===========
+/*
+Function: Cmd_Peek_Left_f
+Description: Do the peekie left
+Author: Angela Vitaletti
+*/
+//===========
+
+void Cmd_Peek_Left_f(edict_t* ent)
+{
+	int i;
+
+	//Not peeking left... Let's do this
+	if (ent->peekL == 0)
+	{
+		VectorCopy(ent->s.origin, ent->client->peek);
+		VectorCopy(ent->s.angles, ent->client->peekangles);
+		ent->client->peekangles[2] = ent->client->peekangles[2] + 330;
+
+		VectorCopy(ent->client->peek, ent->s.origin);
+		VectorCopy(ent->client->peek, ent->s.old_origin);
+		ent->s.origin[0] -= 10;
+		for (i = 0; i < 3; i++)
+			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->peekangles[i] - ent->client->resp.cmd_angles[i]);
+		ent->client->ps.pmove.origin[0] = ent->client->peek[0];
+		VectorClear(ent->s.angles);
+		VectorClear(ent->client->ps.viewangles);
+		VectorClear(ent->client->v_angle);
+		ent->peekL = 1;
+	}
+	else if (ent->peekL != 0)
+	{
+		VectorCopy(ent->s.origin, ent->client->peek);
+		VectorCopy(ent->s.angles, ent->client->peekangles);
+		ent->client->peekangles[2] = 0;
+
+		VectorCopy(ent->client->peek, ent->s.origin);
+		VectorCopy(ent->client->peek, ent->s.old_origin);
+		ent->s.origin[0] += 10;
+		for (i = 0; i < 3; i++)
+			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->peekangles[i] - ent->client->resp.cmd_angles[i]);
+		ent->client->ps.pmove.origin[0] = ent->client->peek[0];
+		VectorClear(ent->s.angles);
+		VectorClear(ent->client->ps.viewangles);
+		VectorClear(ent->client->v_angle);
+		ent->peekL = 0;
+	}
 
 
+}
+
+//===========
+/*
+Function: Cmd_Peek_Right_f
+Description: Do the peekie right
+Author: Angela Vitaletti
+*/
+//===========
+
+void Cmd_Peek_Right_f(edict_t *ent)
+{
+	int i;
+	//You're still peeking right! Return to original
+	if (ent->peekR != 0)
+	{
+		VectorCopy(ent->s.origin, ent->client->peek);
+		VectorCopy(ent->s.angles, ent->client->peekangles);
+		ent->client->peekangles[2] = 0;
+		VectorCopy(ent->client->peek, ent->s.origin);
+		VectorCopy(ent->client->peek, ent->s.old_origin);
+		ent->s.origin[0] -= 10;
+
+		for (i = 0; i < 3; i++)
+			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->peekangles[i] - ent->client->resp.cmd_angles[i]);
+		ent->client->ps.pmove.origin[0] = ent->client->peek[0];
+		VectorClear(ent->s.angles);
+		VectorClear(ent->client->ps.viewangles);
+		VectorClear(ent->client->v_angle);
+		ent->peekR = 0;
+		ent->client->ps.pmove.pm_time = 10;
+	}
+	//You're not peeking... Let's do it 'right' hahaha... If you're reading this... just email me and tell me I'm funny.
+	else if (ent->peekR == 0) 
+	{
+		VectorCopy(ent->s.origin, ent->client->peek);
+		VectorCopy(ent->s.angles, ent->client->peekangles);
+		ent->client->peekangles[2] = ent->client->peekangles[2] + 30;
+		VectorCopy(ent->client->peek, ent->s.origin);
+		VectorCopy(ent->client->peek, ent->s.old_origin);
+		ent->s.origin[0] += 10;
+		for (i = 0; i < 3; i++)
+			ent->client->ps.pmove.delta_angles[i] = ANGLE2SHORT(ent->client->peekangles[i] - ent->client->resp.cmd_angles[i]);
+		ent->client->ps.pmove.origin[0] = ent->client->peek[0];
+		VectorClear(ent->s.angles);
+		VectorClear(ent->client->ps.viewangles);
+		VectorClear(ent->client->v_angle);
+		ent->peekR = 1;
+	}
+}
+
+//===========
+/*
+Function: Make_Crouch_True
+Description: Check if Crouching. Used to Update the State.
+Author: Angela Vitaletti
+*/
+//===========
+void Make_Crouch_True(edict_t *ent)
+{	
+	if (ent->isCrouching == 0)
+	{
+		ent->isCrouching = 1;
+	}
+	else if (ent->isCrouching == 1)
+	{
+		ent->isCrouching = 0;
+	}
 }
 /*
 =================
@@ -1018,48 +1152,48 @@ void ClientCommand (edict_t *ent)
 	if (level.intermissiontime)
 		return;
 
-	if (Q_stricmp (cmd, "use") == 0)
-		Cmd_Use_f (ent);
-	else if (Q_stricmp (cmd, "drop") == 0)
-		Cmd_Drop_f (ent);
-	else if (Q_stricmp (cmd, "give") == 0)
-		Cmd_Give_f (ent);
-	else if (Q_stricmp (cmd, "god") == 0)
-		Cmd_God_f (ent);
-	else if (Q_stricmp (cmd, "notarget") == 0)
-		Cmd_Notarget_f (ent);
-	else if (Q_stricmp (cmd, "noclip") == 0)
-		Cmd_Noclip_f (ent);
-	else if (Q_stricmp (cmd, "inven") == 0)
-		Cmd_Inven_f (ent);
-	else if (Q_stricmp (cmd, "invnext") == 0)
-		SelectNextItem (ent, -1);
-	else if (Q_stricmp (cmd, "invprev") == 0)
-		SelectPrevItem (ent, -1);
-	else if (Q_stricmp (cmd, "invnextw") == 0)
-		SelectNextItem (ent, IT_WEAPON);
-	else if (Q_stricmp (cmd, "invprevw") == 0)
-		SelectPrevItem (ent, IT_WEAPON);
-	else if (Q_stricmp (cmd, "invnextp") == 0)
-		SelectNextItem (ent, IT_POWERUP);
-	else if (Q_stricmp (cmd, "invprevp") == 0)
-		SelectPrevItem (ent, IT_POWERUP);
-	else if (Q_stricmp (cmd, "invuse") == 0)
-		Cmd_InvUse_f (ent);
-	else if (Q_stricmp (cmd, "invdrop") == 0)
-		Cmd_InvDrop_f (ent);
-	else if (Q_stricmp (cmd, "weapprev") == 0)
-		Cmd_WeapPrev_f (ent);
-	else if (Q_stricmp (cmd, "weapnext") == 0)
-		Cmd_WeapNext_f (ent);
-	else if (Q_stricmp (cmd, "weaplast") == 0)
-		Cmd_WeapLast_f (ent);
-	else if (Q_stricmp (cmd, "kill") == 0)
-		Cmd_Kill_f (ent);
-	else if (Q_stricmp (cmd, "putaway") == 0)
-		Cmd_PutAway_f (ent);
-	else if (Q_stricmp (cmd, "wave") == 0)
-		Cmd_Wave_f (ent);
+	if (Q_stricmp(cmd, "use") == 0)
+		Cmd_Use_f(ent);
+	else if (Q_stricmp(cmd, "drop") == 0)
+		Cmd_Drop_f(ent);
+	else if (Q_stricmp(cmd, "give") == 0)
+		Cmd_Give_f(ent);
+	else if (Q_stricmp(cmd, "god") == 0)
+		Cmd_God_f(ent);
+	else if (Q_stricmp(cmd, "notarget") == 0)
+		Cmd_Notarget_f(ent);
+	else if (Q_stricmp(cmd, "noclip") == 0)
+		Cmd_Noclip_f(ent);
+	else if (Q_stricmp(cmd, "inven") == 0)
+		Cmd_Inven_f(ent);
+	else if (Q_stricmp(cmd, "invnext") == 0)
+		SelectNextItem(ent, -1);
+	else if (Q_stricmp(cmd, "invprev") == 0)
+		SelectPrevItem(ent, -1);
+	else if (Q_stricmp(cmd, "invnextw") == 0)
+		SelectNextItem(ent, IT_WEAPON);
+	else if (Q_stricmp(cmd, "invprevw") == 0)
+		SelectPrevItem(ent, IT_WEAPON);
+	else if (Q_stricmp(cmd, "invnextp") == 0)
+		SelectNextItem(ent, IT_POWERUP);
+	else if (Q_stricmp(cmd, "invprevp") == 0)
+		SelectPrevItem(ent, IT_POWERUP);
+	else if (Q_stricmp(cmd, "invuse") == 0)
+		Cmd_InvUse_f(ent);
+	else if (Q_stricmp(cmd, "invdrop") == 0)
+		Cmd_InvDrop_f(ent);
+	else if (Q_stricmp(cmd, "weapprev") == 0)
+		Cmd_WeapPrev_f(ent);
+	else if (Q_stricmp(cmd, "weapnext") == 0)
+		Cmd_WeapNext_f(ent);
+	else if (Q_stricmp(cmd, "weaplast") == 0)
+		Cmd_WeapLast_f(ent);
+	else if (Q_stricmp(cmd, "kill") == 0)
+		Cmd_Kill_f(ent);
+	else if (Q_stricmp(cmd, "putaway") == 0)
+		Cmd_PutAway_f(ent);
+	else if (Q_stricmp(cmd, "wave") == 0)
+		Cmd_Wave_f(ent);
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
 	//Here's my new player actions
@@ -1069,6 +1203,10 @@ void ClientCommand (edict_t *ent)
 		Cmd_Freeze_f(ent);
 	else if (Q_stricmp(cmd, "turn") == 0)
 		Cmd_Turn_f(ent);
+	else if (Q_stricmp(cmd, "peekL") == 0)
+		Cmd_Peek_Left_f(ent);
+	else if (Q_stricmp(cmd, "peekR") == 0)
+		Cmd_Peek_Right_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

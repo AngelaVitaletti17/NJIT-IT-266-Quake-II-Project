@@ -1111,6 +1111,9 @@ struct edict_s
 
 	vec3_t		threesixty; //Turn around 360 degrees, AV
 	int			freeze; //Don't move, AV
-	int			peak; //Peek around corners, AV
+	int			freezeTimer; //Check how long you're frozen, eventually, you will unfreeze
+	int			peekL; //Peek around corners, AV
+	int			peekR;
+	int			isCrouching; //Check to see if crouching. Changes enemy AI
 };
 
