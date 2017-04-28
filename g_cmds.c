@@ -1,13 +1,14 @@
 #include "g_local.h"
 #include "m_player.h"
 
-//3 of 5 Custom Actions
+//5 of 5 Custom Actions
 void Cmd_Zoom_f(edict_t *ent); //Zoom in
 void Cmd_Freeze_f(edict_t *ent); //Freeze?
 void Cmd_Turn_f(edict_t *ent); //Turn 360 degrees
 void Make_Crouch_True(edict_t *ent);
 void Cmd_Peek_Left_f(edict_t *ent);
 void Cmd_Peek_Right_f(edict_t *ent);
+void Cmd_Dance_f(edict_t *ent);
 
 trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 
@@ -262,6 +263,11 @@ void Cmd_Give_f (edict_t *ent)
 	if (Q_stricmp(gi.argv(1), "peekR") == 0)
 	{
 		Cmd_Peek_Right_f(ent);
+		return;
+	}
+	if (Q_stricmp(gi.argv(1), "dance") == 0)
+	{
+		Cmd_Dance_f(ent);
 		return;
 	}
 	if (give_all)
@@ -1109,6 +1115,24 @@ void Make_Crouch_True(edict_t *ent)
 		ent->isCrouching = 0;
 	}
 }
+
+//===========
+/*
+Function: Cmd_Dance_f
+Description: Dance, puppet!
+Author: Angela Vitaletti
+*/
+//===========
+void Cmd_Dance_f(edict_t *ent)
+{
+	ent->isDancing = 0; //As soon as this is 0, the monster will run to it
+	gi.bprintf(PRINT_HIGH, "Dancing");
+	ent->client->anim_priority = ANIM_WAVE;
+	ent->s.frame = FRAME_flip01 - 1;
+	ent->client->anim_end = FRAME_wave11;
+	ent->isDancing = 1;
+}
+
 /*
 =================
 ClientCommand
@@ -1207,6 +1231,8 @@ void ClientCommand (edict_t *ent)
 		Cmd_Peek_Left_f(ent);
 	else if (Q_stricmp(cmd, "peekR") == 0)
 		Cmd_Peek_Right_f(ent);
+	else if (Q_stricmp(cmd, "dance") == 0)
+		Cmd_Dance_f(ent);
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
