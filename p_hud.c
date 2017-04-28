@@ -31,7 +31,6 @@ void MoveClientToIntermission (edict_t *ent)
 	ent->client->enviro_framenum = 0;
 	ent->client->grenade_blew_up = false;
 	ent->client->grenade_time = 0;
-
 	ent->viewheight = 0;
 	ent->s.modelindex = 0;
 	ent->s.modelindex2 = 0;
@@ -452,6 +451,24 @@ void G_SetStats (edict_t *ent)
 		ent->client->ps.stats[STAT_TIMER_ICON] = 0;
 		ent->client->ps.stats[STAT_TIMER] = 0;
 	}
+
+	//Crouching
+	if (ent->isCrouching != 0)
+		ent->client->ps.stats[STAT_CROUCH] = ent->isCrouching;
+	else
+		ent->client->ps.stats[STAT_CROUCH] = 0;
+
+	//Freezing
+	if (ent->freeze != 0)
+		ent->client->ps.stats[STAT_FREEZE] = ent->freeze;
+	else
+		ent->client->ps.stats[STAT_FREEZE] = 0;
+
+	//Dancing
+	if (ent->isDancing != 0)
+		ent->client->ps.stats[STAT_DANCE] = ent->isDancing;
+	else
+		ent->client->ps.stats[STAT_DANCE] = 0;
 
 	//
 	// selected item

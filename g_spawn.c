@@ -772,6 +772,27 @@ char *dm_statusbar =
   "xv 64 "
   "stat_string 16 "
 "endif "
+
+//Crouching, AV
+"if 18 "
+"	xv	-150 "
+"   yv  350 "
+" string \"Crouching\" "
+"endif "
+
+//Freezing, AV
+"if 19 "
+"	xv	-150 "
+"   yv  350 "
+" string \"Not Moving!\" "
+"endif "
+
+//Dancing, AV
+"if 20 "
+"	xv	-160 "
+"   yv  350 "
+" string \"RAVE! THEY'RE COMING\" "
+"endif "
 ;
 
 

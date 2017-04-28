@@ -1125,12 +1125,24 @@ Author: Angela Vitaletti
 //===========
 void Cmd_Dance_f(edict_t *ent)
 {
-	ent->isDancing = 0; //As soon as this is 0, the monster will run to it
-	gi.bprintf(PRINT_HIGH, "Dancing");
-	ent->client->anim_priority = ANIM_WAVE;
-	ent->s.frame = FRAME_flip01 - 1;
-	ent->client->anim_end = FRAME_wave11;
-	ent->isDancing = 1;
+	if (ent->isDancing == 0) //If this happens, the enemy should run towards you. Regardless of where it is. RUN PEASANT
+	{
+		gi.bprintf(PRINT_HIGH, "this is running");
+		ent->client->anim_priority = ANIM_WAVE;
+		ent->s.frame = FRAME_flip01 - 1;
+		ent->client->anim_end = FRAME_wave11;
+		ent->isDancing = 1;
+		VectorClear(ent->velocity);
+		ent->client->ps.pmove.pm_time = 100000 >> 20;
+		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+	}
+	else
+	{
+		ent->isDancing = 0; //As soon as this is 0, the monster will run to it
+		VectorClear(ent->velocity);
+		ent->client->ps.pmove.pm_time = 10;
+		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
+	}
 }
 
 /*

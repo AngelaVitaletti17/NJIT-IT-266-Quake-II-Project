@@ -302,19 +302,19 @@ void SV_CalcViewOffset (edict_t *ent)
 	// absolutely bound offsets
 	// so the view can never be outside the player box
 
-	if (v[0] < -14)
-		v[0] = -14;
-	else if (v[0] > 14)
-		v[0] = 14;
-	if (v[1] < -14)
-		v[1] = -14;
-	else if (v[1] > 14)
-		v[1] = 14;
-	if (v[2] < -22)
-		v[2] = -22;
-	else if (v[2] > 30)
-		v[2] = 30;
-
+		if (v[0] < -14)
+			v[0] = -14;
+		else if (v[0] > 14)
+			v[0] = 14;
+		if (v[1] < -14)
+			v[1] = -14;
+		else if (v[1] > 14)
+			v[1] = 14;
+		if (v[2] < -22)
+			v[2] = -22;
+		else if (v[2] > 30)
+			v[2] = 30;
+	
 	VectorCopy (v, ent->client->ps.viewoffset);
 }
 
