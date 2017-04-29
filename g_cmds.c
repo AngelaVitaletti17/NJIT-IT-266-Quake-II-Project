@@ -11,6 +11,8 @@ void Cmd_Peek_Right_f(edict_t *ent);
 void Cmd_Dance_f(edict_t *ent);
 
 trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+int frozen;
+frozen = 1;
 
 char *ClientTeam (edict_t *ent)
 {
@@ -960,12 +962,16 @@ void Cmd_Freeze_f(edict_t *ent)
 		ent->client->ps.pmove.pm_time = 100000>>20;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
 		ent->freeze = 1;
+		gi.bprintf(PRINT_HIGH, "THEY DON'T SEE YOU");
+		frozen = 0;
 	}
 	//Frozen, melt!
 	else if (ent->freeze != 0){
 		ent->client->ps.pmove.pm_time = 10;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
 		ent->freeze = 0;
+		gi.bprintf(PRINT_HIGH, "THEY SEE YOU");
+		frozen = 1;
 	}
 }
 

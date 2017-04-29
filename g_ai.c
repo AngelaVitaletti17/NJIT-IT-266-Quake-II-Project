@@ -4,6 +4,7 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
+extern int		frozen;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -45,14 +46,14 @@ void AI_SetSightClient (void)
 		if (check > game.maxclients)
 			check = 1;
 		ent = &g_edicts[check];
-		if (ent->inuse
+		if ((ent->inuse
 			&& ent->health > 0
-			&& !(ent->flags & FL_NOTARGET) )
+			&& !(ent->flags & FL_NOTARGET)) || frozen != 0 || frozen == 1)
 		{
 			level.sight_client = ent;
 			return;		// got one
 		}
-		if (check == start)
+		if (check == start || frozen == 0)
 		{
 			level.sight_client = NULL;
 			return;		// nobody to see
@@ -321,7 +322,7 @@ void HuntTarget (edict_t *self)
 	VectorSubtract (self->enemy->s.origin, self->s.origin, vec);
 	self->ideal_yaw = vectoyaw(vec);
 	// wait a while before first attack
-	if (!(self->monsterinfo.aiflags & AI_STAND_GROUND))
+	if ((!(self->monsterinfo.aiflags & AI_STAND_GROUND)))
 		AttackFinished (self, 1);
 }
 
@@ -378,7 +379,7 @@ Returns TRUE if an enemy was sighted
 
 When a player fires a missile, the point of impact becomes a fakeplayer so
 that monsters that see the impact will respond as if they had seen the
-player.
+player. Note this, could be used to have players respond to fireworks. AV
 
 To avoid spending too much time, only a single client (or fakeclient) is
 checked each frame.  This means multi player games will have slightly

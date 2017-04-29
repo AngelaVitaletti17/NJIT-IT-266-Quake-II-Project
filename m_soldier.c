@@ -8,7 +8,7 @@ SOLDIER
 
 #include "g_local.h"
 #include "m_soldier.h"
-#include "m_mutant.h"
+//#include "m_mutant.h"
 
 
 static int	sound_idle;

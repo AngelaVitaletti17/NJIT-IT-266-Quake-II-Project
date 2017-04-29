@@ -1118,4 +1118,3 @@ struct edict_s
 	int			isDancing, danceCount;
 
 };
-
