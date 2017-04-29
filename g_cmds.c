@@ -1127,7 +1127,7 @@ void Cmd_Dance_f(edict_t *ent)
 {
 	if (ent->isDancing == 0) //If this happens, the enemy should run towards you. Regardless of where it is. RUN PEASANT
 	{
-		gi.bprintf(PRINT_HIGH, "this is running");
+		//gi.bprintf(PRINT_HIGH, "this is running");
 		ent->client->anim_priority = ANIM_WAVE;
 		ent->s.frame = FRAME_flip01 - 1;
 		ent->client->anim_end = FRAME_wave11;

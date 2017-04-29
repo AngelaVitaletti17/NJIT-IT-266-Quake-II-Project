@@ -539,6 +539,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	for (i=0 ; i<game.maxclients ; i++)
 		g_edicts[i+1].client = game.clients + i;
 
+
 	ent = NULL;
 	inhibit = 0;
 
@@ -562,6 +563,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(ent->classname, "trigger_once") && !Q_stricmp(ent->model, "*27"))
 			ent->spawnflags &= ~SPAWNFLAG_NOT_HARD;
 
+
 		// remove things (except the world) from different skill levels or deathmatch
 		if (ent != g_edicts)
 		{
@@ -574,18 +576,19 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 					continue;
 				}
 			}
+
 			else
 			{
-				if ( /* ((coop->value) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
-					((skill->value == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
-					((skill->value == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
-					(((skill->value == 2) || (skill->value == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
-					)
-					{
-						G_FreeEdict (ent);	
-						inhibit++;
-						continue;
-					}
+			if ( /* ((coop->value) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
+				((skill->value == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
+				((skill->value == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
+				(((skill->value == 2) || (skill->value == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
+				)
+				{
+					G_FreeEdict (ent);	
+					inhibit++;
+					continue;
+				}
 			}
 
 			ent->spawnflags &= ~(SPAWNFLAG_NOT_EASY|SPAWNFLAG_NOT_MEDIUM|SPAWNFLAG_NOT_HARD|SPAWNFLAG_NOT_COOP|SPAWNFLAG_NOT_DEATHMATCH);
@@ -594,6 +597,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		ED_CallSpawn (ent);
 	}	
 
+	gi.bprintf(PRINT_HIGH, "%i entities inhibited\n", inhibit);
 	gi.dprintf ("%i entities inhibited\n", inhibit);
 
 #ifdef DEBUG

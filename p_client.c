@@ -102,6 +102,7 @@ potential spawning position for deathmatch games
 */
 void SP_info_player_deathmatch(edict_t *self)
 {
+	//AV
 	if (!deathmatch->value)
 	{
 		G_FreeEdict (self);
@@ -865,7 +866,7 @@ void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles)
 	edict_t	*spot = NULL;
 
 	if (deathmatch->value)
-		spot = SelectDeathmatchSpawnPoint ();
+		spot = SelectDeathmatchSpawnPoint (); //AV Remember this
 	else if (coop->value)
 		spot = SelectCoopSpawnPoint (ent);
 
@@ -1810,6 +1811,7 @@ void ClientBeginServerFrame (edict_t *ent)
 	}
 
 	// add player trail so monsters can follow
+	//Perhaps get rid of this, too.
 	if (!deathmatch->value)
 		if (!visible (ent, PlayerTrail_LastSpot() ) )
 			PlayerTrail_Add (ent->s.old_origin);

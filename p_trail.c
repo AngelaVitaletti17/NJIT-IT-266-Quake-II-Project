@@ -31,6 +31,7 @@ void PlayerTrail_Init (void)
 {
 	int		n;
 
+	//What's this? AV
 	if (deathmatch->value /* FIXME || coop */)
 		return;
 
