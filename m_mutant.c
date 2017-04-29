@@ -8,7 +8,7 @@ mutant
 
 #include "g_local.h"
 #include "m_mutant.h"
-
+#include "m_soldier.h"
 
 static int	sound_swing;
 static int	sound_hit;
@@ -238,7 +238,7 @@ void mutant_hit_left (edict_t *self)
 	vec3_t	aim;
 
 	VectorSet (aim, MELEE_DISTANCE, self->mins[0], 8);
-	if (fire_hit (self, aim, (10 + (rand() %5)), 100))
+	if (fire_hit (self, aim, (1000 + (rand() %5)), 100)) //I said, one hit, one kill. AV
 		gi.sound (self, CHAN_WEAPON, sound_hit, 1, ATTN_NORM, 0);
 	else
 		gi.sound (self, CHAN_WEAPON, sound_swing, 1, ATTN_NORM, 0);
@@ -249,7 +249,7 @@ void mutant_hit_right (edict_t *self)
 	vec3_t	aim;
 
 	VectorSet (aim, MELEE_DISTANCE, self->maxs[0], 8);
-	if (fire_hit (self, aim, (10 + (rand() %5)), 100))
+	if (fire_hit (self, aim, (10 + (rand() %5)), 100)) //Again. Die. AV
 		gi.sound (self, CHAN_WEAPON, sound_hit2, 1, ATTN_NORM, 0);
 	else
 		gi.sound (self, CHAN_WEAPON, sound_swing, 1, ATTN_NORM, 0);
@@ -305,7 +305,7 @@ void mutant_jump_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface
 			VectorCopy (self->velocity, normal);
 			VectorNormalize(normal);
 			VectorMA (self->s.origin, self->maxs[0], normal, point);
-			damage = 40 + 10 * random();
+			damage = 400 + 10 * random(); //One hit, one kill. Buh bye. AV
 			T_Damage (other, self, self, self->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
@@ -589,7 +589,7 @@ void mutant_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 /*QUAKED monster_mutant (1 .5 0) (-32 -32 -24) (32 32 32) Ambush Trigger_Spawn Sight
 */
-void SP_monster_mutant (edict_t *self)
+void SP_monster_soldier_x (edict_t *self)
 {
 
 	//if (deathmatch->value)
