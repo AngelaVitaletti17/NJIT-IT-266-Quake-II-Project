@@ -48,12 +48,12 @@ void AI_SetSightClient (void)
 		ent = &g_edicts[check];
 		if ((ent->inuse
 			&& ent->health > 0
-			&& !(ent->flags & FL_NOTARGET)) || frozen != 0 || frozen == 1)
+			&& !(ent->flags & FL_NOTARGET)) || frozen == 0)
 		{
 			level.sight_client = ent;
 			return;		// got one
 		}
-		if (check == start || frozen == 0)
+		if (check == start || frozen == 1)
 		{
 			level.sight_client = NULL;
 			return;		// nobody to see
@@ -243,7 +243,7 @@ returns the range catagorization of an entity reletive to self
 3	only triggered by damage
 =============
 */
-int range (edict_t *self, edict_t *other)
+int range (edict_t *self, edict_t *other) //Perhaps mod this for crouching distance
 {
 	vec3_t	v;
 	float	len;
@@ -447,7 +447,10 @@ qboolean FindTarget (edict_t *self)
 
 	if (client == self->enemy)
 		return true;	// JDC false;
-
+	if (frozen == 1)
+	{
+		return false;
+	}
 	if (client->client)
 	{
 		if (client->flags & FL_NOTARGET)
@@ -789,6 +792,10 @@ qboolean ai_checkattack (edict_t *self, float dist)
 	if ((!self->enemy) || (!self->enemy->inuse))
 	{
 		hesDeadJim = true;
+	}
+	else if (frozen == 1)
+	{
+		hesDeadJim = true; //Not really dead, but we think he is, AV
 	}
 	else if (self->monsterinfo.aiflags & AI_MEDIC)
 	{

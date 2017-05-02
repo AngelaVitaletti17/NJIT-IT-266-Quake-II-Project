@@ -331,7 +331,7 @@ void mutant_jump_takeoff (edict_t *self)
 	AngleVectors (self->s.angles, forward, NULL, NULL);
 	self->s.origin[2] += 1;
 	VectorScale (forward, 600, self->velocity);
-	self->velocity[2] = 250;
+	self->velocity[2] = 50;
 	self->groundentity = NULL;
 	self->monsterinfo.aiflags |= AI_DUCKED;
 	self->monsterinfo.attack_finished = level.time + 3;
