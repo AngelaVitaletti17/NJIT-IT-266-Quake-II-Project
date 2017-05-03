@@ -4,7 +4,7 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
-extern int		frozen;
+extern int		frozen, crouching;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -53,7 +53,7 @@ void AI_SetSightClient (void)
 			level.sight_client = ent;
 			return;		// got one
 		}
-		if (check == start || frozen == 1)
+		if (check == start || frozen == 1 || crouching == 1) //I'm beginning to question if this does anything useful. AV
 		{
 			level.sight_client = NULL;
 			return;		// nobody to see
@@ -390,8 +390,11 @@ qboolean FindTarget (edict_t *self)
 {
 	edict_t		*client;
 	qboolean	heardit;
-	int			r;
+	int			r, safeDis;
+	int		curDis;
+	vec3_t		curDisVec;
 
+	safeDis = 175;
 	if (self->monsterinfo.aiflags & AI_GOOD_GUY)
 	{
 		if (self->goalentity && self->goalentity->inuse && self->goalentity->classname)
@@ -441,6 +444,10 @@ qboolean FindTarget (edict_t *self)
 			return false;	// no clients to get mad at
 	}
 
+	//Let's compare the distance between the player and the monster, AV
+	VectorSubtract(self->s.old_origin, client->s.old_origin, curDisVec);
+	curDis = VectorLength(curDisVec);
+
 	// if the entity went away, forget it
 	if (!client->inuse)
 		return false;
@@ -451,6 +458,9 @@ qboolean FindTarget (edict_t *self)
 	{
 		return false;
 	}
+	if (crouching == 1 && curDis > safeDis) //Check if the player is crouching and if they are within a safe distance away from the monster, AV
+		return false;
+	
 	if (client->client)
 	{
 		if (client->flags & FL_NOTARGET)

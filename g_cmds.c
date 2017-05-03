@@ -11,7 +11,7 @@ void Cmd_Peek_Right_f(edict_t *ent);
 void Cmd_Dance_f(edict_t *ent);
 
 trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-int frozen;
+int frozen, crouching;
 
 char *ClientTeam (edict_t *ent)
 {
@@ -1114,10 +1114,12 @@ void Make_Crouch_True(edict_t *ent)
 	if (ent->isCrouching == 0)
 	{
 		ent->isCrouching = 1;
+		crouching = 1;
 	}
 	else if (ent->isCrouching == 1)
 	{
 		ent->isCrouching = 0;
+		crouching = 0;
 	}
 }
 
