@@ -4,7 +4,8 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
-extern int		frozen, crouching;
+extern int		frozen, crouching, dancing;
+extern int		disableStealth, disableFreeze;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -390,8 +391,7 @@ qboolean FindTarget (edict_t *self)
 {
 	edict_t		*client;
 	qboolean	heardit;
-	int			r, safeDis;
-	int		curDis;
+	int			r, safeDis, youDanced, curDis;
 	vec3_t		curDisVec;
 
 	safeDis = 175;
@@ -460,26 +460,53 @@ qboolean FindTarget (edict_t *self)
 	}
 	if (crouching == 1 && curDis > safeDis) //Check if the player is crouching and if they are within a safe distance away from the monster, AV
 		return false;
+	if (dancing == 1) //You're dying. Let's disable freezing and stealth (crouch)
+	{
+		gi.sound(client, CHAN_NO_PHS_ADD, gi.soundindex("player/fry.wav"), 1, ATTN_NONE, 0);
+		heardit = true;
+		youDanced = 1;
+		disableStealth = 1;
+		disableFreeze = 1;
+		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
+		self->enemy = client;
+		FoundTarget(self);
+		return true;
+	}
 	
 	if (client->client)
 	{
 		if (client->flags & FL_NOTARGET)
+		{
+			gi.bprintf(PRINT_HIGH, "STOP1");
 			return false;
+		}
 	}
 	else if (client->svflags & SVF_MONSTER)
 	{
 		if (!client->enemy)
+		{
+			gi.bprintf(PRINT_HIGH, "STOP2");
 			return false;
+		}
 		if (client->enemy->flags & FL_NOTARGET)
+		{
+			gi.bprintf(PRINT_HIGH, "STOP3");
 			return false;
+		}
 	}
-	else if (heardit)
+	else if (heardit) //Modify this for fireworks... maybe.
 	{
 		if (client->owner->flags & FL_NOTARGET)
+		{
+			gi.bprintf(PRINT_HIGH, "STOP4");
 			return false;
+		}
 	}
 	else
+	{
+		gi.bprintf(PRINT_HIGH, "STOP5");
 		return false;
+	}
 
 	if (!heardit)
 	{
@@ -534,13 +561,20 @@ qboolean FindTarget (edict_t *self)
 	else	// heardit
 	{
 		vec3_t	temp;
+		gi.bprintf(PRINT_HIGH, "STOP6"); //Okay so it gets this far... Why does it not recognize youDanced == 1?
+		if (youDanced == 1)
+		{
+			gi.bprintf(PRINT_HIGH, "This runs");
+			//youDanced = 0;
+			return true;
+		}
 
-		if (self->spawnflags & 1)
+		if (self->spawnflags & 1 && youDanced != 1)
 		{
 			if (!visible (self, client))
 				return false;
 		}
-		else
+		else if (youDanced != 1)
 		{
 			if (!gi.inPHS(self->s.origin, client->s.origin))
 				return false;
@@ -548,16 +582,17 @@ qboolean FindTarget (edict_t *self)
 
 		VectorSubtract (client->s.origin, self->s.origin, temp);
 
-		if (VectorLength(temp) > 1000)	// too far to hear
+		if (VectorLength(temp) > 1000 && youDanced != 1)	// too far to hear, or you didn't dance, because if you did dance.. well...
 		{
 			return false;
 		}
 
 		// check area portals - if they are different and not connected then we can't hear it
-		if (client->areanum != self->areanum)
+		if (client->areanum != self->areanum && youDanced != 1)
 			if (!gi.AreasConnected(self->areanum, client->areanum))
 				return false;
 
+		youDanced = 0;
 		self->ideal_yaw = vectoyaw(temp);
 		M_ChangeYaw (self);
 

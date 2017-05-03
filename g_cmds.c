@@ -11,7 +11,8 @@ void Cmd_Peek_Right_f(edict_t *ent);
 void Cmd_Dance_f(edict_t *ent);
 
 trace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-int frozen, crouching;
+int frozen, crouching, dancing;
+int disableFreeze, disableStealth;
 
 char *ClientTeam (edict_t *ent)
 {
@@ -954,22 +955,26 @@ void Cmd_Zoom_f(edict_t *ent)
 //===========
 void Cmd_Freeze_f(edict_t *ent)
 {
+	if (disableFreeze == 1)
+	{
+		gi.centerprintf(ent, "FREEZE DISABLED!");
+		return;
+	}
+	
 	//Not frozen, freeze
-	if (ent->freeze == 0)
+	if (ent->freeze == 0 && disableFreeze != 1)
 	{
 		VectorClear(ent->velocity);
 		ent->client->ps.pmove.pm_time = 100000>>20;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
 		ent->freeze = 1;
-		gi.bprintf(PRINT_HIGH, "THEY DON'T SEE YOU");
 		frozen = 1;
 	}
 	//Frozen, melt!
-	else if (ent->freeze != 0){
+	else if (ent->freeze != 0 && disableFreeze != 1){
 		ent->client->ps.pmove.pm_time = 10;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
 		ent->freeze = 0;
-		gi.bprintf(PRINT_HIGH, "THEY SEE YOU");
 		frozen = 0;
 	}
 }
@@ -1111,6 +1116,11 @@ Author: Angela Vitaletti
 //===========
 void Make_Crouch_True(edict_t *ent)
 {	
+	if (disableStealth == 1)
+	{
+		gi.centerprintf(ent, "STEALTH DISABLED");
+		return;
+	}
 	if (ent->isCrouching == 0)
 	{
 		ent->isCrouching = 1;
@@ -1139,13 +1149,15 @@ void Cmd_Dance_f(edict_t *ent)
 		ent->s.frame = FRAME_flip01 - 1;
 		ent->client->anim_end = FRAME_wave11;
 		ent->isDancing = 1;
+		dancing = 1;
 		VectorClear(ent->velocity);
 		ent->client->ps.pmove.pm_time = 100000 >> 20;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;
 	}
 	else
 	{
-		ent->isDancing = 0; //As soon as this is 0, the monster will run to it
+		ent->isDancing = 0; //As soon as this is 1, the monster will run to it
+		dancing = 0;
 		VectorClear(ent->velocity);
 		ent->client->ps.pmove.pm_time = 10;
 		ent->client->ps.pmove.pm_flags |= PMF_TIME_TELEPORT;

@@ -1,6 +1,8 @@
 #include "g_local.h"
 #include "m_player.h"
 
+extern int disableFreeze, disableStealth;
+
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
 void SP_misc_teleporter_dest (edict_t *ent);
@@ -511,6 +513,9 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 	if (!self->deadflag)
 	{
+		//AV
+		disableFreeze = 0; //Disable this
+		disableStealth = 0; //Disable that
 		self->client->respawn_time = level.time + 1.0;
 		LookAtKiller (self, inflictor, attacker);
 		self->client->ps.pmove.pm_type = PM_DEAD;
