@@ -4,8 +4,9 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
-extern int		frozen, crouching, dancing;
+extern int		frozen, crouching, dancing, exploded, doneEx;
 extern int		disableStealth, disableFreeze;
+extern edict_t	*clusterwork;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -391,7 +392,7 @@ qboolean FindTarget (edict_t *self)
 {
 	edict_t		*client;
 	qboolean	heardit;
-	int			r, safeDis, youDanced, curDis;
+	int			r, safeDis, youDanced, curDis, itExploded;
 	vec3_t		curDisVec;
 
 	safeDis = 175;
@@ -472,7 +473,21 @@ qboolean FindTarget (edict_t *self)
 		FoundTarget(self);
 		return true;
 	}
-	
+	if (exploded == 1 && doneEx != 1)
+	{
+		gi.bprintf(PRINT_HIGH, "Yes\n\n");
+		gi.sound(client, CHAN_AUTO, gi.soundindex("player/fry.wav"), 1, ATTN_IDLE, 0);
+		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
+		self->enemy = clusterwork;
+		FoundTarget(self);
+		return true;
+	}
+	if (doneEx == 1)
+	{
+		gi.bprintf(PRINT_HIGH, "No\n\n");
+		doneEx = 0;
+		exploded = 0;
+	}
 	if (client->client)
 	{
 		if (client->flags & FL_NOTARGET)

@@ -2,7 +2,8 @@
 
 static void Sparkler_Explode(edict_t *ent);
 void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
-int exploded;
+int exploded, doneEx;
+edict_t *clusterwork;
 /*
 =================
 check_dodge
@@ -449,10 +450,12 @@ static void Firework_Explode_Cluster(edict_t *ent)
 		vec3_t		origin;
 		int i;
 		VectorSet(origin, 20, 20, 300);
-
+		clusterwork = ent;
+		exploded = 1;
 		if (ent->sparkCount > 20)
 		{
 			G_FreeEdict(ent);
+			doneEx = 1;
 			return;
 		}
 		for (i = 0; i < 7; i++)
