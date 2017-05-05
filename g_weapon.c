@@ -1,7 +1,7 @@
 #include "g_local.h"
 
-static void Sparkler_Explode(edict_t *ent);
 void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
+static void Firework_Explode_Single(edict_t *ent);
 int exploded, doneEx;
 edict_t *clusterwork;
 /*
@@ -494,83 +494,16 @@ static void Firework_Explode_Single(edict_t *ent)
 
 	VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
 	gi.WriteByte (svc_temp_entity);
-	if (ent->waterlevel)
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
-		else
-			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
-	}
-	else
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION);
-		else
-			gi.WriteByte (TE_ROCKET_EXPLOSION);
-	}
+
+	gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
 
 	gi.WritePosition (origin);
 	gi.multicast (ent->s.origin, MULTICAST_PVS);
 
-	fireworks_splash(ent, origin, spark1, 0, 10, 1.0);
+	fire_grenade(ent, origin, spark1, 0, 10, 1.0, 0);
 
 	G_FreeEdict (ent);
 
-}
-
-static void Sparkler_Explode(edict_t* ent)
-{
-	vec3_t		origin;
-
-	vec3_t		spark1;
-	vec3_t		spark2;
-	vec3_t		spark3;
-	vec3_t		spark4;
-
-	vec3_t		sparks[8];
-
-	vec3_t		neworigin;
-	vec3_t		downbelow;
-
-	int i;
-	int j;
-
-	VectorSet(downbelow, 0, 0, -50);
-
-	for (i = 0; i < 8; i++)
-	{
-		VectorSet(sparks[i], crandom() * 10, crandom() * 10, crandom() * 20);
-	}
-
-	VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
-	gi.WriteByte (svc_temp_entity);
-	if (ent->waterlevel)
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
-		else
-			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
-	}
-	else
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION);
-		else
-				gi.WriteByte (TE_GRENADE_EXPLOSION);
-	}
-	
-
-	gi.WritePosition (origin);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
-	
-	VectorSubtract(origin, downbelow, neworigin);
-
-	for (j = 0; j < 8; j++)
-	{
-		fire_grenade2(ent, neworigin, sparks[j], 0, 10, 1.0, 0, false);
-	}
-	exploded = 1;
-	G_FreeEdict(ent);
 }
 
 static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
@@ -607,36 +540,33 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 //AV My_Touch Function
 static void My_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
+	vec3_t origin;
+	VectorSet(origin, 500, 500, 20);
 	if (other == ent->owner)
 		return;
 
 	if (surf && (surf->flags & SURF_SKY))
 	{
-		//fire_grenade(ent, ent->s.origin,ent->s.origin,0,10,1.0,0);
-		ent->s.renderfx = EF_GRENADE;
-		gi.multicast(ent->s.origin, MULTICAST_ALL);
-		Sparkler_Explode(ent);
+		gi.WriteByte(svc_temp_entity);
+		gi.WriteByte(TE_SPLASH);
+		gi.WriteByte(400);
+		gi.WritePosition(ent->s.origin);
+		gi.WriteDir(origin);
+		gi.WriteByte(6);
+		gi.multicast(ent->s.origin, MULTICAST_PVS);
 		G_FreeEdict (ent);
 	}
-
-	if (!other->takedamage)
+	else 
 	{
-		if (ent->spawnflags & 1)
-		{
-			if (random() > 0.5)
-				gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb1a.wav"), 1, ATTN_NORM, 0);
-			else
-				gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb2a.wav"), 1, ATTN_NORM, 0);
-		}
-		else
-		{
-			gi.sound (ent, CHAN_VOICE, gi.soundindex ("weapons/grenlb1b.wav"), 1, ATTN_NORM, 0);
-		}
-		return;
+		gi.WriteByte(svc_temp_entity);
+		gi.WriteByte(TE_SPLASH);
+		gi.WriteByte(400);
+		gi.WritePosition(ent->s.origin);
+		gi.WriteDir(origin);
+		gi.WriteByte(6);
+		gi.multicast(ent->s.origin, MULTICAST_PVS);
+		//G_FreeEdict (ent);
 	}
-
-	ent->enemy = other;
-	Grenade_Explode (ent);
 }
 
 void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)
@@ -687,7 +617,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	VectorMA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
 	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
 	VectorSet (grenade->avelocity, 300, 300, 300);
-	grenade->movetype = MOVETYPE_BOUNCE;
+	grenade->movetype = MOVETYPE_FLYMISSILE;
 	grenade->clipmask = MASK_SHOT;
 	grenade->solid = SOLID_BSP;
 	grenade->s.effects |= EF_GRENADE;
@@ -994,10 +924,7 @@ void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int da
 	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
 	firework->owner = self;
 	firework->touch = Grenade_Touch;
-	if(isChild == 1)
-		firework->nextthink = level.time + 10; //takes longer to explode
-	else
-		firework->nextthink = level.time + 1.0; 
+	firework->nextthink = level.time + 3;
 	firework->sparkCount = 0;
 	firework->think = Firework_Explode_Cluster;//HEYO
 	firework->classname = "hfirework";
@@ -1007,7 +934,7 @@ void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int da
 	gi.linkentity(firework);
 }
 
-//Sky firework
+//Rock
 void throw_rock (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild)
 {
 	edict_t	*firework;
@@ -1044,8 +971,8 @@ void throw_rock (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int spe
 	gi.linkentity(firework);
 }
 
-//Explosion in the sky
-void fireworks_splash (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer)
+//Skyworks
+void fire_fireworks_sky(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
 {
 	edict_t	*firework;
 	vec3_t	dir;
@@ -1060,57 +987,22 @@ void fireworks_splash (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
 	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
 	VectorSet (firework->avelocity, 300, 300, 300);
-	firework->movetype = MOVETYPE_FLYMISSILE;
+	firework->movetype = MOVETYPE_BOUNCE;
 	firework->clipmask = MASK_SHOT;
 	firework->solid = SOLID_BBOX;
-	firework->s.effects |= EF_IONRIPPER;
+	firework->s.effects |= EF_GRENADE;
 	VectorClear (firework->mins);
 	VectorClear (firework->maxs);
 	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
 	firework->owner = self;
 	firework->touch = My_Touch;
-	firework->nextthink = level.time + 2.0;
-	firework->think = Sparkler_Explode; //HEYO
-	firework->classname = "sparkfirework";
+	firework->nextthink = level.time + 10; //takes longer to explode
+	firework->think = Firework_Explode_Single; //HEYO
+	firework->classname = "sfirework";
 	firework->spawnflags = 1;
 	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
 	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
 	gi.linkentity(firework);
-}
-
-//Throw a damn rock
-void fire_fireworks_sky(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
-{
-	edict_t *rock;
-	vec3_t dir;
-	vec3_t forward, right, up;
-
-	vectoangles(aimdir, dir);
-	AngleVectors(dir, forward, right, up);
-
-	rock = G_Spawn();
-	VectorCopy(start, rock->s.origin);
-	VectorScale(aimdir, speed, rock->velocity);
-	VectorMA(rock->velocity, 200 + crandom() * 10.0, up, rock->velocity);
-	VectorMA(rock->velocity, crandom() * 10.0, right, rock->velocity);
-	VectorSet(rock->avelocity, 300, 300, 300);
-	rock->movetype = MOVETYPE_BOUNCE;
-	rock->clipmask = MASK_SHOT;
-	rock->solid = SOLID_BBOX;
-	rock->s.effects |= EF_GRENADE;
-	VectorClear(rock->mins);
-	VectorClear(rock->maxs);
-	rock->s.modelindex = gi.modelindex("models/objects/grenade/tris.md2");
-	rock->owner = self;
-	rock->touch = Grenade_Touch;
-	rock->nextthink = level.time + 5.0;
-	rock->think = Firework_Explode_Single;
-	rock->classname = "hgrenade";
-	//rock->takedamage = DAMAGE_NO;
-	rock->spawnflags = 1;
-	rock->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
-	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
-	gi.linkentity(rock);
 }
 
 void bfg_think (edict_t *self)
