@@ -4,9 +4,9 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
-extern int		frozen, crouching, dancing, exploded, doneEx;
+extern int		frozen, crouching, dancing, exploded1, exploded2, doneEx1, doneEx2;
 extern int		disableStealth, disableFreeze;
-extern edict_t	*clusterwork;
+extern edict_t	*clusterwork, *skywork;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -473,26 +473,37 @@ qboolean FindTarget (edict_t *self)
 		FoundTarget(self);
 		return true;
 	}
-	if (exploded == 1 && doneEx != 1)
+	if (exploded1 == 1 && doneEx1 != 1) //Is the clusterwork exploding?
 	{
-		gi.bprintf(PRINT_HIGH, "Yes\n\n");
 		gi.sound(client, CHAN_AUTO, gi.soundindex("player/fry.wav"), 1, ATTN_IDLE, 0);
 		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
 		self->enemy = clusterwork;
 		FoundTarget(self);
 		return true;
 	}
-	if (doneEx == 1)
+	if (doneEx1 == 1) //Did the clusterwork finish exploding?
 	{
-		gi.bprintf(PRINT_HIGH, "No\n\n");
-		doneEx = 0;
-		exploded = 0;
+		doneEx1 = 0;
+		exploded1 = 0;
+	}
+	if(exploded2 == 1 && doneEx2 != 1) //Is the skywork exploding?
+	{
+		gi.sound(client, CHAN_AUTO, gi.soundindex("player/fry.wav"), 1, ATTN_IDLE, 0);
+		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
+		self->enemy = skywork;
+		FoundTarget(self);
+		return true;
+	}
+	if (doneEx2 == 1) //Did the skywork finish exploding?
+	{
+		doneEx2 = 0;
+		exploded2 = 0;
+		return false;
 	}
 	if (client->client)
 	{
 		if (client->flags & FL_NOTARGET)
 		{
-			gi.bprintf(PRINT_HIGH, "STOP1");
 			return false;
 		}
 	}
@@ -500,12 +511,10 @@ qboolean FindTarget (edict_t *self)
 	{
 		if (!client->enemy)
 		{
-			gi.bprintf(PRINT_HIGH, "STOP2");
 			return false;
 		}
 		if (client->enemy->flags & FL_NOTARGET)
 		{
-			gi.bprintf(PRINT_HIGH, "STOP3");
 			return false;
 		}
 	}
@@ -513,13 +522,11 @@ qboolean FindTarget (edict_t *self)
 	{
 		if (client->owner->flags & FL_NOTARGET)
 		{
-			gi.bprintf(PRINT_HIGH, "STOP4");
 			return false;
 		}
 	}
 	else
 	{
-		gi.bprintf(PRINT_HIGH, "STOP5");
 		return false;
 	}
 
@@ -576,11 +583,8 @@ qboolean FindTarget (edict_t *self)
 	else	// heardit
 	{
 		vec3_t	temp;
-		gi.bprintf(PRINT_HIGH, "STOP6"); //Okay so it gets this far... Why does it not recognize youDanced == 1?
 		if (youDanced == 1)
 		{
-			gi.bprintf(PRINT_HIGH, "This runs");
-			//youDanced = 0;
 			return true;
 		}
 

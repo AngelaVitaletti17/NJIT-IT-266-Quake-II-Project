@@ -2,8 +2,8 @@
 
 void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
 static void Firework_Explode_Single(edict_t *ent);
-int exploded, doneEx;
-edict_t *clusterwork;
+int exploded1, exploded2, doneEx1, doneEx2;
+edict_t *clusterwork, *skywork;
 /*
 =================
 check_dodge
@@ -443,19 +443,18 @@ static void Grenade_Explode (edict_t *ent)
 	Author: Angela Vitaletti
 */
 //--------------------------------------------------------------------------------------------------------------------------------------------------------//
-int toomany = 0;
-int notChild = false;
+
 static void Firework_Explode_Cluster(edict_t *ent)
 {
 		vec3_t		origin;
 		int i;
 		VectorSet(origin, 20, 20, 300);
 		clusterwork = ent;
-		exploded = 1;
+		exploded1 = 1;
 		if (ent->sparkCount > 20)
 		{
 			G_FreeEdict(ent);
-			doneEx = 1;
+			doneEx1 = 1;
 			return;
 		}
 		for (i = 0; i < 7; i++)
@@ -482,27 +481,42 @@ static void Firework_Explode_Cluster(edict_t *ent)
 	Author: Angela Vitaletti
 */
 //--------------------------------------------------------------------------------------------------------------------------------------------------------//
+int alreadyFired;
 static void Firework_Explode_Single(edict_t *ent)
 {
-	vec3_t		origin;
+	vec3_t		origin, spark1;
 
-	vec3_t		spark1;
+	if (alreadyFired == 1)
+	{
+		if (ent->skytimer > 50) //Wait a litte longer before we try and find a target
+		{
+			doneEx2 = 1;
+			alreadyFired = 0;
+			G_FreeEdict (ent);
+			return;
+		}
+	}
+	
+	if (alreadyFired != 1)
+	{
+		exploded2 = 1;
+		skywork = ent;
+		VectorSet(spark1, 0, 0, 100);
+		VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
 
-	qboolean	held;
+		gi.WriteByte (svc_temp_entity);
 
-	VectorSet(spark1, 0, 0, 100);
+		gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
 
-	VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
-	gi.WriteByte (svc_temp_entity);
+		gi.WritePosition (origin);
+		gi.multicast (ent->s.origin, MULTICAST_PVS);
 
-	gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
-
-	gi.WritePosition (origin);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
-
-	fire_grenade(ent, origin, spark1, 0, 10, 1.0, 0);
-
-	G_FreeEdict (ent);
+		fire_grenade(ent, origin, spark1, 0, 10, 1.0, 0);
+		
+		alreadyFired = 1;
+	}
+	ent->nextthink = level.time + .2;
+	ent->skytimer++;
 
 }
 
@@ -565,7 +579,6 @@ static void My_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t 
 		gi.WriteDir(origin);
 		gi.WriteByte(6);
 		gi.multicast(ent->s.origin, MULTICAST_PVS);
-		//G_FreeEdict (ent);
 	}
 }
 
@@ -896,6 +909,8 @@ void bfg_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf
 Fire Fireworks
 ==============
 */
+
+//Rock think function
 static void ItsARock(edict_t *ent)
 {
 	G_FreeEdict(ent);
@@ -996,6 +1011,7 @@ void fire_fireworks_sky(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
 	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
 	firework->owner = self;
 	firework->touch = My_Touch;
+	firework->skytimer = 0;
 	firework->nextthink = level.time + 10; //takes longer to explode
 	firework->think = Firework_Explode_Single; //HEYO
 	firework->classname = "sfirework";

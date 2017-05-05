@@ -1108,13 +1108,9 @@ struct edict_s
 	edict_t		*key;
 
 	int			pickup; //Implement later for picking up already thrown items, AV
-
-	vec3_t		threesixty; //Turn around 360 degrees, AV
-	int			freeze; //Don't move, AV
-	int			freezeTimer; //Check how long you're frozen, eventually, you will unfreeze
-	int			peekL; //Peek around corners, AV
-	int			peekR;
+	int			freeze; //Are we frozen?
+	int			peekL, peekR; //Are we peeking left or right?
 	int			isCrouching; //Check to see if crouching. Changes enemy AI
-	int			isDancing, danceCount;
-	int			sparkCount;
+	int			isDancing; //Are we dancing?
+	int			sparkCount, skytimer; //Control timers to allow for the AI to chase the sound of the firework or rock
 };
