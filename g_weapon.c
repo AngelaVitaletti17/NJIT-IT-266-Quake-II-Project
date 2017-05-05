@@ -2,7 +2,7 @@
 
 static void Sparkler_Explode(edict_t *ent);
 void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
-
+int exploded;
 /*
 =================
 check_dodge
@@ -445,57 +445,30 @@ static void Grenade_Explode (edict_t *ent)
 int toomany = 0;
 int notChild = false;
 static void Firework_Explode_Cluster(edict_t *ent)
-
-
 {
-	vec3_t		origin;
+		vec3_t		origin;
+		int i;
+		VectorSet(origin, 20, 20, 300);
 
-	vec3_t		sparks[4];
-
-	int i;
-	int j;
-	if (toomany < 16){
-		i= 0;
-		for (i = 0; i < 4; i++)
+		if (ent->sparkCount > 20)
 		{
-			VectorSet(sparks[i], crandom() * 10, crandom() * 10, crandom() * 20);
+			G_FreeEdict(ent);
+			return;
 		}
-		toomany++;
-
-		VectorMA (ent->s.origin, 200 + crandom() * 10.0, ent->velocity, origin);
-		gi.WriteByte (svc_temp_entity);
-
-		if (ent->waterlevel)
+		for (i = 0; i < 7; i++)
 		{
-			if (ent->groundentity)
-				gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
-			else
-				gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
+			if (i == 3)
+				i++;
+			gi.WriteByte(svc_temp_entity);
+			gi.WriteByte(TE_SPLASH);
+			gi.WriteByte(150);
+			gi.WritePosition (ent->s.origin);
+			gi.WriteDir(origin);
+			gi.WriteByte(i);
+			gi.multicast (ent->s.origin, MULTICAST_PVS);
 		}
-		else
-		{
-			if (ent->groundentity)
-				gi.WriteByte (TE_GRENADE_EXPLOSION);
-			else
-				gi.WriteByte (TE_ROCKET_EXPLOSION);
-		}
-
-		gi.WritePosition (origin);
-		gi.multicast (ent->s.origin, MULTICAST_PVS);
-	
-		j = 0;
-		for (j = 0; j < 4; j++)
-		{
-			fire_fireworks_fountain(ent, origin, sparks[j], 0, 20, 1.0, 0);
-			G_FreeEdict (ent);
-		}
-		
-	}
-	else
-	{
-		G_FreeEdict (ent);
-	}
-
+		ent->sparkCount++;
+		ent->nextthink = level.time + .2;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -593,6 +566,7 @@ static void Sparkler_Explode(edict_t* ent)
 	{
 		fire_grenade2(ent, neworigin, sparks[j], 0, 10, 1.0, 0, false);
 	}
+	exploded = 1;
 	G_FreeEdict(ent);
 }
 
@@ -1021,6 +995,7 @@ void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int da
 		firework->nextthink = level.time + 10; //takes longer to explode
 	else
 		firework->nextthink = level.time + 1.0; 
+	firework->sparkCount = 0;
 	firework->think = Firework_Explode_Cluster;//HEYO
 	firework->classname = "hfirework";
 	firework->spawnflags = 1;

@@ -1116,5 +1116,5 @@ struct edict_s
 	int			peekR;
 	int			isCrouching; //Check to see if crouching. Changes enemy AI
 	int			isDancing, danceCount;
-
+	int			sparkCount;
 };

@@ -1593,7 +1593,8 @@ void SP_target_string (edict_t *self)
 }
 
 
-/*QUAKED func_clock (0 0 1) (-8 -8 -8) (8 8 8) TIMER_UP TIMER_DOWN START_OFF MULTI_USE
+/*QUAKED func_clock (0 0 1) (-8 -8 -8) (8 8 8) 
+_UP TIMER_DOWN START_OFF MULTI_USE
 target a target_string with this
 
 The default is to be a time of day clock
