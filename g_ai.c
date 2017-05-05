@@ -4,9 +4,9 @@
 
 qboolean FindTarget (edict_t *self);
 extern cvar_t	*maxclients;
-extern int		frozen, crouching, dancing, exploded1, exploded2, doneEx1, doneEx2;
+extern int		frozen, crouching, dancing, exploded1, exploded2, doneEx1, doneEx2, wasThrown, landedThrow;
 extern int		disableStealth, disableFreeze;
-extern edict_t	*clusterwork, *skywork;
+extern edict_t	*clusterwork, *skywork, *rock;
 
 qboolean ai_checkattack (edict_t *self, float dist);
 
@@ -499,6 +499,19 @@ qboolean FindTarget (edict_t *self)
 		doneEx2 = 0;
 		exploded2 = 0;
 		return false;
+	}
+	if (wasThrown == 1 && landedThrow != 1)
+	{
+		gi.sound(client, CHAN_AUTO, gi.soundindex("player/fry.wav"), 1, ATTN_IDLE, 0);
+		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
+		self->enemy = rock;
+		FoundTarget(self);
+		return true;
+	}
+	if (landedThrow == 1)
+	{
+		landedThrow = 0;
+		wasThrown = 0;
 	}
 	if (client->client)
 	{

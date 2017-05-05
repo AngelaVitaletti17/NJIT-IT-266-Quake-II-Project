@@ -2,8 +2,8 @@
 
 void fireworks_splash(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer);
 static void Firework_Explode_Single(edict_t *ent);
-int exploded1, exploded2, doneEx1, doneEx2;
-edict_t *clusterwork, *skywork;
+int exploded1, exploded2, doneEx1, doneEx2, wasThrown, landedThrow;
+edict_t *clusterwork, *skywork, *rock;
 /*
 =================
 check_dodge
@@ -520,6 +520,22 @@ static void Firework_Explode_Single(edict_t *ent)
 
 }
 
+//Rock think function
+static void ItsARock(edict_t *ent)
+{
+	rock = ent;
+
+	if (ent->rockLook > 10)
+	{
+		landedThrow = 1;
+		G_FreeEdict(ent);
+		return;
+	}
+	wasThrown = 1;
+	landedThrow = 0;
+	ent->rockLook++;
+	ent->nextthink = level.time +.2;
+}
 static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
 	if (other == ent->owner)
@@ -910,11 +926,7 @@ Fire Fireworks
 ==============
 */
 
-//Rock think function
-static void ItsARock(edict_t *ent)
-{
-	G_FreeEdict(ent);
-}
+
 void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild)
 {
 	edict_t	*firework;
@@ -952,38 +964,36 @@ void fire_fireworks_fountain (edict_t *self, vec3_t start, vec3_t aimdir, int da
 //Rock
 void throw_rock (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, int isChild)
 {
-	edict_t	*firework;
+	edict_t	*rock;
 	vec3_t	dir;
 	vec3_t	forward, right, up;
 
 	vectoangles (aimdir, dir);
 	AngleVectors (dir, forward, right, up);
 
-	firework = G_Spawn();
-	VectorCopy (start, firework->s.origin);
-	VectorScale (aimdir, speed, firework->velocity);
-	VectorMA (firework->velocity, 200 + crandom() * 10.0, up, firework->velocity);
-	VectorMA (firework->velocity, crandom() * 10.0, right, firework->velocity);
-	VectorSet (firework->avelocity, 300, 300, 300);
-	firework->movetype = MOVETYPE_BOUNCE;
-	firework->clipmask = MASK_SHOT;
-	firework->solid = SOLID_BBOX;
-	firework->s.effects |= EF_GRENADE;
-	VectorClear (firework->mins);
-	VectorClear (firework->maxs);
-	firework->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
-	firework->owner = self;
-	firework->touch = Grenade_Touch;
-	if(isChild == 1)
-		firework->nextthink = level.time + 10; //takes longer to explode
-	else
-		firework->nextthink = level.time + 1.0; 
-	firework->think = ItsARock; //HEYO
-	firework->classname = "sfirework";
-	firework->spawnflags = 1;
-	firework->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	rock = G_Spawn();
+	VectorCopy (start, rock->s.origin);
+	VectorScale (aimdir, speed, rock->velocity);
+	VectorMA (rock->velocity, 200 + crandom() * 10.0, up, rock->velocity);
+	VectorMA (rock->velocity, crandom() * 10.0, right, rock->velocity);
+	VectorSet (rock->avelocity, 300, 300, 300);
+	rock->movetype = MOVETYPE_BOUNCE;
+	rock->clipmask = MASK_SHOT;
+	rock->solid = SOLID_BBOX;
+	rock->s.effects |= EF_GRENADE;
+	VectorClear (rock->mins);
+	VectorClear (rock->maxs);
+	rock->s.modelindex = gi.modelindex ("models/items/ammo/grenades/medium/tris.md2");
+	rock->owner = self;
+	rock->touch = Grenade_Touch;
+	rock->rockLook = 0;
+	rock->nextthink = level.time + .5; //It's a rock, it makes noise when it hits the ground 
+	rock->think = ItsARock; 
+	rock->classname = "srock";
+	rock->spawnflags = 1;
+	rock->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
 	gi.sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"), 1, ATTN_NORM, 0);
-	gi.linkentity(firework);
+	gi.linkentity(rock);
 }
 
 //Skyworks
