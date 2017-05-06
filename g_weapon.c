@@ -1161,23 +1161,11 @@ static void FL_think(edict_t* ent)
 	if (ent->owner->client)
 		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
 	VectorMA (ent->s.origin, -0.02, ent->velocity, origin);
-	gi.WriteByte (svc_temp_entity);
-	if (ent->waterlevel)
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION_WATER);
-		else
-			gi.WriteByte (TE_ROCKET_EXPLOSION_WATER);
-	}
-	else
-	{
-		if (ent->groundentity)
-			gi.WriteByte (TE_GRENADE_EXPLOSION);
-		else
-			gi.WriteByte (TE_ROCKET_EXPLOSION);
-	}
-	gi.WritePosition (origin);
-	gi.multicast (ent->s.origin, MULTICAST_PHS);
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_BUBBLETRAIL);
+	gi.WritePosition(origin);
+	gi.WritePosition(ent->s.origin);
+	gi.multicast(ent->s.origin, MULTICAST_PHS);
 }
 
 void FL_make(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
@@ -1205,7 +1193,7 @@ void FL_make(edict_t *self, vec3_t start, vec3_t aimdir, int speed)
 	firework->s.modelindex = gi.modelindex ("models/objects/grenade/tris.md2");
 	firework->owner = self;
 	firework->touch = FL_TOUCH;
-		firework->nextthink = level.time + 10; //takes longer to explode
+		firework->nextthink = level.time + 10;
 		firework->think = FL_think; //HEYO
 	firework->classname = "flashlight";
 	firework->spawnflags = 1;

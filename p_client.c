@@ -1249,7 +1249,7 @@ void PutClientInServer (edict_t *ent) //Use this for spawning enemies in the fut
 
 	//av
 	give_ammo = FindItem("flashlight");
-	Add_Ammo(ent, give_ammo, 20);
+	Add_Ammo(ent, give_ammo, 19);
 	
 
 	// force the current weapon up
