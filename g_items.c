@@ -1,5 +1,6 @@
 #include "g_local.h"
 
+int			keyCount = 0;
 
 qboolean	Pickup_Weapon (edict_t *ent, edict_t *other);
 void		Use_Weapon (edict_t *ent, gitem_t *inv);
@@ -406,6 +407,9 @@ void	Use_Silencer (edict_t *ent, gitem_t *item)
 
 qboolean Pickup_Key (edict_t *ent, edict_t *other)
 {
+	keyCount++;
+	if (keyCount < 3)
+		gi.centerprintf(ent, "Picked up key!");
 	if (coop->value)
 	{
 		if (strcmp(ent->classname, "key_power_cube") == 0)
@@ -1371,6 +1375,27 @@ gitem_t	itemlist[] =
 		0,
 		NULL,
 		0,
+/* precache */ ""
+	},
+	//Empty item, used to replace other items in the map that aren't needed
+	{
+		"item_empty",
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		"",
+		"", NULL,
+		NULL,
+		"",
+		"",
+		NULL,
+		NULL,
+		NULL,
+		IT_STAY_COOP,
+		NULL,
+		NULL,
+		NULL,
 /* precache */ ""
 	},
 	//Removed blaster

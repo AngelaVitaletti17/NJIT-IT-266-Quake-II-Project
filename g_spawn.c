@@ -131,10 +131,11 @@ void SP_turret_driver (edict_t *self);
 
 
 spawn_t	spawns[] = {
-	{"item_health", SP_item_health},
+	//There's no health in this game haha
+	/*{"item_health", SP_item_health},
 	{"item_health_small", SP_item_health_small},
 	{"item_health_large", SP_item_health_large},
-	{"item_health_mega", SP_item_health_mega},
+	{"item_health_mega", SP_item_health_mega},*/ 
 
 	{"info_player_start", SP_info_player_start},
 	{"info_player_deathmatch", SP_info_player_deathmatch},
@@ -1001,20 +1002,44 @@ void SP_worldspawn (edict_t *ent)
 
 //AV Replaces stuff on the map
 void MyModReplace(edict_t *ent, gitem_t *item){
-	char *replace_item[6][2] =
+	char *replace_item[30][2] =
 	{
 		{"ammo_shells", "ammo_fireworks"},
 		{"ammo_grenades", "ammo_rocks"},
 		{"ammo_bullets", "ammo_skyworks"},
 		{"weapon_chaingun", "item_key"},
 		{"weapon_rocketlauncher", "item_key"},
-		{"weapon_shotgun", "item_key"}
+		{"weapon_shotgun", "item_key"},
+		{"item_armor_body", "item_empty"},
+		{"item_armor_combat", "item_empty"},
+		{"item_armor_jacket", "item_empty"},
+		{"item_armor_shard", "item_empty"},
+		{"item_power_screen", "item_empty"},
+		{"item_power_shield", "item_empty"},
+		{"weapon_shotgun", "item_empty"},
+		{"weapon_supershotgun", "item_empty"},
+		{"weapon_machinegun", "item_key"},
+		{"weapon_grenadelauncher", "item_empty"},
+		{"weapon_hyperblaster", "item_empty"},
+		{"weapon_railgun", "item_empty"},
+		{"weapon_bfg", "item_empty"},
+		{"ammo_cells", "ammo_rocks"},
+		{"ammo_rockets", "item_empty"},
+		{"ammo_slugs", "item_empty"},
+		{"item_quad", "ammo_fireworks"},
+		{"item_invulnerability", "ammo_fireworks"},
+		{"item_silencer", "item_empty"},
+		{"item_enviro", "item_empty"},
+		{"item_adrenaline", "item_empty"},
+		{"item_pack", "item_empty"}
 	};
-	int i;
-	for (i = 0; i < 6; i++)
+	int i, j;
+	for (i = 0; i < 30; i++)
 	{
 		if (!replace_item[i][0])
+		{
 			continue;
+		}
 		if (Q_stricmp(ent->classname, replace_item[i][0]) == 0)
 		{
 			ent->classname = item->classname = replace_item[i][1];
@@ -1022,4 +1047,5 @@ void MyModReplace(edict_t *ent, gitem_t *item){
 			return;
 		}
 	}
+	
 }

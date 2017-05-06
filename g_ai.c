@@ -500,7 +500,7 @@ qboolean FindTarget (edict_t *self)
 		exploded2 = 0;
 		return false;
 	}
-	if (wasThrown == 1 && landedThrow != 1)
+	if (wasThrown == 1 && landedThrow != 1) //It was thrown, play a noise and have the monster chase it
 	{
 		gi.sound(client, CHAN_AUTO, gi.soundindex("player/fry.wav"), 1, ATTN_IDLE, 0);
 		self->monsterinfo.aiflags |= AI_SOUND_TARGET;
@@ -508,7 +508,7 @@ qboolean FindTarget (edict_t *self)
 		FoundTarget(self);
 		return true;
 	}
-	if (landedThrow == 1)
+	if (landedThrow == 1) //It landed, the monster chased it, stop it
 	{
 		landedThrow = 0;
 		wasThrown = 0;

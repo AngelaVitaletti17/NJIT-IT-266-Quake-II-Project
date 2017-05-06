@@ -1,7 +1,7 @@
 #include "g_local.h"
 #include "m_player.h"
 
-extern int disableFreeze, disableStealth;
+extern int disableFreeze, disableStealth, keyCount;
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
@@ -973,7 +973,7 @@ void CopyToBodyQue (edict_t *ent)
 
 void respawn (edict_t *self)
 {
-	if (deathmatch->value || coop->value)
+	/*if (deathmatch->value || coop->value)
 	{
 		// spectator's don't leave bodies
 		if (self->movetype != MOVETYPE_NOCLIP)
@@ -991,10 +991,10 @@ void respawn (edict_t *self)
 		self->client->respawn_time = level.time;
 
 		return;
-	}
+	}*/
 
 	// restart the entire server
-	gi.AddCommandString ("menu_loadgame\n");
+	gi.AddCommandString ("menu_multiplayer\n"); //Start a new game, you died, game over
 }
 
 /* 
@@ -1586,6 +1586,11 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 	level.current_entity = ent;
 	client = ent->client;
+
+	if (keyCount == 3)
+	{
+		gi.centerprintf(ent, "YOU GOT ALL THE KEYS! YOU WON!");
+	}
 
 	if (level.intermissiontime)
 	{
