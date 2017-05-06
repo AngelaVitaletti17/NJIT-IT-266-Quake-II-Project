@@ -1587,10 +1587,17 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	level.current_entity = ent;
 	client = ent->client;
 
+	//Just to let you know how many keys you have while also being grammatically correct AV
 	if (keyCount == 3)
 	{
 		gi.centerprintf(ent, "YOU GOT ALL THE KEYS! YOU WON!");
 	}
+	if (keyCount > 1 || keyCount == 0)
+	{
+		gi.bprintf(PRINT_HIGH, "You have: %i keys\n\n\n", keyCount);
+	}
+	else if (keyCount == 1)
+		gi.bprintf(PRINT_HIGH, "You have: %i key\n\n\n", keyCount);
 
 	if (level.intermissiontime)
 	{

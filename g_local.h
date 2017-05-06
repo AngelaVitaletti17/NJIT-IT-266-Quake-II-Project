@@ -1103,14 +1103,15 @@ struct edict_s
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
-
-	edict_t		*flashlight;
+	
 	edict_t		*key;
 
+	//AV
 	int			pickup; //Implement later for picking up already thrown items, AV
 	int			freeze; //Are we frozen?
 	int			peekL, peekR; //Are we peeking left or right?
 	int			isCrouching; //Check to see if crouching. Changes enemy AI
 	int			isDancing; //Are we dancing?
 	int			sparkCount, skytimer, rockLook; //Control timers to allow for the AI to chase the sound of the firework or rock
+	
 };
