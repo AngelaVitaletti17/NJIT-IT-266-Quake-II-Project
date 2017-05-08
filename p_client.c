@@ -1586,7 +1586,6 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 
 	level.current_entity = ent;
 	client = ent->client;
-
 	//Just to let you know how many keys you have while also being grammatically correct AV
 	if (keyCount == 3)
 	{
